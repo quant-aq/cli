@@ -38,6 +38,6 @@ NEW_TAG=${VERSION_BITS[1]}
 git add -A
 git commit -m "Pushing a new release candidate"
 
-# git tag $NEW_TAG
-echo "Tagged with $NEW_TAG"
-# git push --tags
+git tag $NEW_TAG
+git push --tags
+echo "Tagged and pushed to GitHub"
