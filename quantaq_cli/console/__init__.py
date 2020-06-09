@@ -24,7 +24,7 @@ def concat(files, output, verbose, **kwargs):
 
 @click.command("merge", short_help="merge two files together on their timestamp")
 @click.argument("files", nargs=-1, type=click.Path())
-@click.option("-t", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
+@click.option("-ts", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
 def merge(files, tscol, output, verbose, **kwargs):
@@ -35,6 +35,20 @@ def merge(files, tscol, output, verbose, **kwargs):
     merge_command(files, output, tscol=tscol, verbose=verbose, **kwargs)
 
 
+@click.command("resample", short_help="up/down sample data")
+@click.argument("file", nargs=1, type=click.Path())
+@click.argument("interval", nargs=1, type=str)
+@click.option("-ts", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
+@click.option("-m", "--method", default="mean", help="One of [mean, median, sum, min, max]")
+@click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
+def resample(file, interval, tscol, method, output, verbose, **kwargs):
+    """Resample FILE at INTERVAL and save to OUTPUT
+    """
+    from .commands.resample import resample_command
+
+    resample_command(file, interval, output, method=method, tscol=tscol, verbose=verbose, **kwargs)
+
 # flag (pop out table?)
 
 # expunge (nan)
@@ -44,3 +58,4 @@ def merge(files, tscol, output, verbose, **kwargs):
 # add the commands one-by-one
 main.add_command(concat)
 main.add_command(merge)
+main.add_command(resample)
