@@ -1,6 +1,6 @@
 # QuantAQ Command Line Interface (CLI)
 
-[![PyPI version](https://badge.fury.io/py/opcsim.svg)](https://badge.fury.io/py/opcsim)
+[![PyPI version](https://badge.fury.io/py/quantaq-cli.svg)](https://badge.fury.io/py/quantaq-cli)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/quant-aq/cli/blob/master/LICENSE)
 ![run and build](https://github.com/quant-aq/cli/workflows/run%20and%20build/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/quant-aq/cli/branch/master/graph/badge.svg)](https://codecov.io/gh/quant-aq/cli)
