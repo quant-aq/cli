@@ -1,44 +1,77 @@
 import unittest
+from click.testing import CliRunner
 from os import path
+from pathlib import Path
+import os
 import shutil, tempfile
 import pandas as pd
 
-def create_fake_file(fpath, **kwargs):
-    header = kwargs.pop("header", False)
-    nrows  = kwargs.pop("nrows", 25)
-
-    cols = ["timestamp", "id", "temp_box", "bin0", "bin1", "bin2", "bin3", "co_we", "co_ae", "flag"]
-
-    # create the times
-    timestamps = pd.date_range("2020-01-01", periods=nrows, freq='min')
-
-    # open a file for writing
-    with open(fpath, "a") as f:
-        if header:
-            f.write("deviceID,12703192301\n")
-        
-        # write the real header column
-        f.write(",".join(cols) + "\n")
-
-        for i, r in enumerate(range(nrows)):
-            f.write(str(timestamps[i]) + ",")
-            f.write("\n")
+from quantaq_cli.console import concat
 
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
+        self.test_files_dir = os.path.join(os.getcwd(), "tests/files")
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
-    
-    def test_something(self):
-        fpath = path.join(self.test_dir, "test.csv")
-        
-        create_fake_file(fpath, header=True, nrows=10)
 
-        with open(fpath, "r") as f:
-            content = f.readlines()
+    def test_concat_files_csv(self):
+        runner = CliRunner()
+        result = runner.invoke(concat, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "-v",
+                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
+                        os.path.join(self.test_files_dir, "lcs-2.csv"),
+                    ]
+                )
         
-        for line in [x.strip() for x in content]:
-            print (line)
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+        # are the number of lines correct?
+        df1 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-1.csv"))
+        df2 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-2.csv"), skiprows=1)
+        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+
+        self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
+
+    def test_concat_files_feather(self):
+        runner = CliRunner()
+        result = runner.invoke(concat, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.feather"),
+                        "-v",
+                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
+                        os.path.join(self.test_files_dir, "lcs-2.csv"),
+                    ]
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.feather")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".feather")
+
+

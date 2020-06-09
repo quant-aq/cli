@@ -32,6 +32,12 @@ $ poetry install
 $ poetry run pytest tests
 ```
 
+or 
+
+```sh
+$ poetry run coverage run -m unittest discover
+```
+
 ## Development
 
 ## Contributing

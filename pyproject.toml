@@ -13,8 +13,9 @@ classifiers = []
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-cleo = "^0.8.1"
 pandas = "^1.0.4"
+click = "^7.1.2"
+pyarrow = "^0.17.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"
