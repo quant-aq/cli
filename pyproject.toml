@@ -20,6 +20,10 @@ pyarrow = "^0.17.1"
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"
 pytest-coverage = "^0.0"
+sphinx = "^3.1.0"
+recommonmark = "^0.6.0"
+toml = "^0.10.1"
+sphinx-click = "^2.3.2"
 
 [tool.poetry.scripts]
 quantaq-cli = "quantaq_cli.console:main"
