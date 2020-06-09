@@ -30,7 +30,7 @@ else
 fi
 
 # Tag
-VERSION = `poetry version`
+VERSION=`poetry version`
 VERSION_BITS=(${VERSION//  })
 NEW_TAG=${VERSION_BITS[1]}
 
