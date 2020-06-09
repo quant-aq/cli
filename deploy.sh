@@ -38,17 +38,6 @@ NEW_TAG=${VERSION_BITS[1]}
 git add -A
 git commit -m "Pushing a new release candidate"
 
-# get the previous version
-PREV_VERSION=`git describe --abbrev=0 --tags`
-
-GIT_COMMIT=`git rev-parse HEAD`
-NEEDS_TAG=`git describe --contains $GIT_COMMIT 2>/dev/null`
-
-# create a new tag
-if [ -z "$NEEDS_TAG" ]; then
-    # git tag $NEW_TAG
-    echo "Tagged with $NEW_TAG"
-    # git push --tags
-else 
-    echo "Already a tag on this commit"
-fi
+# git tag $NEW_TAG
+echo "Tagged with $NEW_TAG"
+# git push --tags
