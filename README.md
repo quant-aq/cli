@@ -1,12 +1,15 @@
 # QuantAQ Command Line Interface (CLI)
 
-[stuff here]
+[![PyPI version](https://badge.fury.io/py/opcsim.svg)](https://badge.fury.io/py/opcsim)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/quant-aq/cli/blob/master/LICENSE)
+![run and build](https://github.com/quant-aq/cli/workflows/run%20and%20build/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/quant-aq/cli/branch/master/graph/badge.svg)](https://codecov.io/gh/quant-aq/cli)
 
 This package provides easy-to-use tools to munge data associated with QuantAQ air quality sensors. 
 
 ## Documentation
 
-Full documentation can be found [here](https://docs.quant-aq.com).
+Full documentation can be found [here](https://quant-aq.github.io/cli/).
 
 ## Dependencies
 
