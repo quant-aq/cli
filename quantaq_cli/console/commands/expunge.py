@@ -44,7 +44,9 @@ def expunge_command(file, output, **kwargs):
         pct_affected = round((n_affected / df.shape[0]) * 100.0, 2)
 
         # NaN the necessary columns
-        if len(cols) > 0:
+        if cols is None:
+            cols = df.columns
+        elif len(cols) > 0:
             cols = [c for c in cols if c in df.columns]
     
         # set the mask

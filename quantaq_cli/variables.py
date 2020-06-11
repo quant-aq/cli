@@ -12,10 +12,11 @@ FLAGS["v100"] = [
     ("FLAG_CO", 8, ["co_we", "co_ae"]),
     ("FLAG_NO", 16, ["no_we", "no_ae"]),
     ("FLAG_NO2", 32, ["no2_we", "no2_ae"]),
-    ("FLAG_OX", 64, ["o3_we", "o3_ae"]),
+    ("FLAG_O3", 64, ["o3_we", "o3_ae"]),
     ("FLAG_OPC_RECORD_NUM", 128, ["bin0", "bin1", "bin2", "bin3", "bin4", "bin5", "opc_flow"]),
     ("FLAG_CO2", 256 , ["co2_raw"]),
     # ("FLAG_PP", 512, ),
+    ("FLAG_ROW", 1024, None)
 ]
 
 # flags for the v200 are the same as the v100
