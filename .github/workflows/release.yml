@@ -1,8 +1,8 @@
 name: build & release
 on:
-  push:
+  create:
     tags:
-      - 'v*'
+      - v*
 
 jobs:
     build-n-publish:

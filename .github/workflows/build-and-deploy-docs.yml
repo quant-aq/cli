@@ -1,8 +1,8 @@
 name: docs/gh-pages
 on:
-  push:
+  create:
     tags:
-      - "v*"
+      - v*
 
 jobs:
     build-docs:

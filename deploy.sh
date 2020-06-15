@@ -37,6 +37,7 @@ NEW_TAG=${VERSION_BITS[1]}
 # commit the changes
 git add -A
 git commit -m "Pushing a new release candidate"
+git push 
 
 git tag $NEW_TAG
 git push --tags
