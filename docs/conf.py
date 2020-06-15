@@ -43,6 +43,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx_click.ext',
+    'sphinx.ext.intersphinx',
     'recommonmark'
 ]
 
