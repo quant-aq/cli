@@ -2,7 +2,7 @@ name: docs/gh-pages
 on:
   push:
     tags:
-        - 'v*'
+      - "v*"
 
 jobs:
     build-docs:
