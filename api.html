@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Reference &#8212; quantaq-cli 0.1.0 documentation</title>
+    <title>API Reference &#8212; quantaq-cli 0.1.3 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -41,8 +41,8 @@
 </div>
 <div class="section" id="quantaq-cli-concat">
 <h3>concat<a class="headerlink" href="#quantaq-cli-concat" title="Permalink to this headline">¶</a></h3>
-<p>Concatenate <em>FILES</em> together and save to <em>OUTPUT</em>.</p>
-<p><em>FILES</em> is the collection or list of files that you are concatenating together. They
+<p>Concatenate FILES together and save to OUTPUT.</p>
+<p>FILES is the collection or list of files that you are concatenating together. They
 can be provided as a list or by using a wildcard and providing the path with wildcard.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>quantaq-cli concat <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>FILES<span class="o">]</span>...
 </pre></div>
@@ -65,6 +65,183 @@ can be provided as a list or by using a wildcard and providing the path with wil
 <dt id="cmdoption-quantaq-cli-concat-arg-FILES">
 <code class="sig-name descname">FILES</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-concat-arg-FILES" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optional argument(s)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="quantaq-cli-expunge">
+<h3>expunge<a class="headerlink" href="#quantaq-cli-expunge" title="Permalink to this headline">¶</a></h3>
+<p>Expunge (NaN flagged values) FILE and save to OUTPUT.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>quantaq-cli expunge <span class="o">[</span>OPTIONS<span class="o">]</span> FILE
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-expunge-d">
+<span id="cmdoption-quantaq-cli-expunge-dry-run"></span><code class="sig-name descname">-d</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--dry-run</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-expunge-d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print table to screen and bypass file save</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-expunge-o">
+<span id="cmdoption-quantaq-cli-expunge-output"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--output</code><code class="sig-prename descclassname"> &lt;output&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-expunge-o" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filepath where you would like to save the file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-expunge-f">
+<span id="cmdoption-quantaq-cli-expunge-flag"></span><code class="sig-name descname">-f</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--flag</code><code class="sig-prename descclassname"> &lt;flag&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-expunge-f" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the flag column</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-expunge-v">
+<span id="cmdoption-quantaq-cli-expunge-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-expunge-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable verbose mode (debugging)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-expunge-arg-FILE">
+<code class="sig-name descname">FILE</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-expunge-arg-FILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</div>
+<div class="section" id="quantaq-cli-flag">
+<h3>flag<a class="headerlink" href="#quantaq-cli-flag" title="Permalink to this headline">¶</a></h3>
+<p>Set a FLAG based on user input or statistical method.</p>
+<dl class="simple">
+<dt>Four arguments are required:</dt><dd><ol class="arabic simple">
+<li><p>FILE -&gt; the path to the file of interest</p></li>
+<li><p>COLUMN -&gt; the exact name of the column</p></li>
+<li><p>COMPARATOR -&gt; one of [‘lt’, ‘gt’, ‘eq’, ‘le’, ‘ge’]</p></li>
+<li><p>VALUE -&gt; the value by which to filter</p></li>
+</ol>
+</dd>
+</dl>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>quantaq-cli flag <span class="o">[</span>OPTIONS<span class="o">]</span> FILE COLUMN COMPARATOR VALUE
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-f">
+<span id="cmdoption-quantaq-cli-flag-flag"></span><code class="sig-name descname">-f</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--flag</code><code class="sig-prename descclassname"> &lt;flag&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-f" title="Permalink to this definition">¶</a></dt>
+<dd><p>One of [FLAG_OPC, FLAG_CO, FLAG_NO, FLAG_NO2, FLAG_O3, FLAG_CO2, FLAG_ROW]</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-o">
+<span id="cmdoption-quantaq-cli-flag-output"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--output</code><code class="sig-prename descclassname"> &lt;output&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-o" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filepath where you would like to save the file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-v">
+<span id="cmdoption-quantaq-cli-flag-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable verbose mode (debugging)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-arg-FILE">
+<code class="sig-name descname">FILE</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-arg-FILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-arg-COLUMN">
+<code class="sig-name descname">COLUMN</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-arg-COLUMN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-arg-COMPARATOR">
+<code class="sig-name descname">COMPARATOR</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-arg-COMPARATOR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-flag-arg-VALUE">
+<code class="sig-name descname">VALUE</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-flag-arg-VALUE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</div>
+<div class="section" id="quantaq-cli-merge">
+<h3>merge<a class="headerlink" href="#quantaq-cli-merge" title="Permalink to this headline">¶</a></h3>
+<p>Merge FILES together and save to OUTPUT.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>quantaq-cli merge <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>FILES<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-merge-ts">
+<span id="cmdoption-quantaq-cli-merge-tscol"></span><code class="sig-name descname">-ts</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--tscol</code><code class="sig-prename descclassname"> &lt;tscol&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-merge-ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>The column by which to join the files</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-merge-o">
+<span id="cmdoption-quantaq-cli-merge-output"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--output</code><code class="sig-prename descclassname"> &lt;output&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-merge-o" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filepath where you would like to save the file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-merge-v">
+<span id="cmdoption-quantaq-cli-merge-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-merge-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable verbose mode (debugging)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-merge-arg-FILES">
+<code class="sig-name descname">FILES</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-merge-arg-FILES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional argument(s)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="quantaq-cli-resample">
+<h3>resample<a class="headerlink" href="#quantaq-cli-resample" title="Permalink to this headline">¶</a></h3>
+<p>Resample FILE at INTERVAL and save to OUTPUT.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>quantaq-cli resample <span class="o">[</span>OPTIONS<span class="o">]</span> FILE INTERVAL
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-ts">
+<span id="cmdoption-quantaq-cli-resample-tscol"></span><code class="sig-name descname">-ts</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--tscol</code><code class="sig-prename descclassname"> &lt;tscol&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>The column by which to join the files</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-m">
+<span id="cmdoption-quantaq-cli-resample-method"></span><code class="sig-name descname">-m</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--method</code><code class="sig-prename descclassname"> &lt;method&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-m" title="Permalink to this definition">¶</a></dt>
+<dd><p>One of [mean, median, sum, min, max]</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-o">
+<span id="cmdoption-quantaq-cli-resample-output"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--output</code><code class="sig-prename descclassname"> &lt;output&gt;</code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-o" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filepath where you would like to save the file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-v">
+<span id="cmdoption-quantaq-cli-resample-verbose"></span><code class="sig-name descname">-v</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--verbose</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable verbose mode (debugging)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-arg-FILE">
+<code class="sig-name descname">FILE</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-arg-FILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-quantaq-cli-resample-arg-INTERVAL">
+<code class="sig-name descname">INTERVAL</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-quantaq-cli-resample-arg-INTERVAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
 </dd></dl>
 
 </div>
@@ -95,6 +272,10 @@ can be provided as a list or by using a wildcard and providing the path with wil
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#quantaq-cli">quantaq-cli</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#quantaq-cli-concat">concat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantaq-cli-expunge">expunge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantaq-cli-flag">flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantaq-cli-merge">merge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantaq-cli-resample">resample</a></li>
 </ul>
 </li>
 </ul>

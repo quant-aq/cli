@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usage &#8212; quantaq-cli 0.1.0 documentation</title>
+    <title>Usage &#8212; quantaq-cli 0.1.3 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -35,7 +35,270 @@
             
   <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
-<p>Coming soon!</p>
+<p>The primary purpose of the <em>quantaq-cli</em> is to make it easier for you - the user - to munge and analyze
+your sensor data. A quick overview of the available functions are below, with more detailed documentation
+on their complete functionality in the <a class="reference internal" href="api.html"><span class="doc">API Reference</span></a>.</p>
+<ul class="simple">
+<li><p><strong>concat</strong> enables you to concatenate large groups of files together into one</p></li>
+<li><p><strong>merge</strong> allows you to combine a number of files together based on their timestamp</p></li>
+<li><p><strong>resample</strong> helps you up- or down-sample your data</p></li>
+<li><p><strong>expunge</strong> sets all flagged data to NaN’s</p></li>
+<li><p><strong>flag</strong> allows you to drop rows based on specific criteria or statistical methods (<strong>coming soon</strong>)</p></li>
+</ul>
+<div class="section" id="overview-of-available-commands">
+<h2>Overview of Available Commands<a class="headerlink" href="#overview-of-available-commands" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="concatenate-files">
+<h3>Concatenate Files<a class="headerlink" href="#concatenate-files" title="Permalink to this headline">¶</a></h3>
+<p>The purpose of this command is to take a bunch of files of the same type and concatenate them together. To use, you
+must provide either a list of files or a wildcard argument that will glob all of the files together. <strong>FILES</strong> is
+the only required argument, as can be seen in the <a class="reference internal" href="api.html"><span class="doc">API Reference</span></a>.</p>
+<p>Below is an example of a wildcard argument that will grab all files in the directory that begin with <strong>data</strong> and
+are <strong>.csv</strong>’s. We would expect this command to concatenate all of those files and output them to <strong>path/output.csv</strong>.
+Additionally, the verbosity flag has been set (<strong>-v</strong>) which will print out additional debugging information to
+the console.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli concat -v -o path/output.csv path/data*.csv
+</pre></div>
+</div>
+<p>If you wanted to explicitly define the individual files to concatenate, you can do that as well:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli concat -v path/file-1.csv path/file-2.csv
+</pre></div>
+</div>
+<p>This time, we didn’t define the output path (<strong>-o</strong>), so the default will be used which will save the file
+to your current working directory.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Arguments must come at the <strong>end</strong> of the command. For this CLI, this usually means the filepath for the
+files being read in. However, you can always check the <a class="reference internal" href="api.html"><span class="doc">API Reference</span></a> for complete documentation.</p>
+</div>
+</div>
+<div class="section" id="merge-files">
+<h3>Merge Files<a class="headerlink" href="#merge-files" title="Permalink to this headline">¶</a></h3>
+<p>Often times, there is a need to merge two (or more) files on their timestamp. For
+example, if we have <strong>raw</strong> and <strong>final</strong> data files (or sensor data and reference station
+data), we need to merge them into a single file to make analysis easier. We can
+leverage the <strong>merge</strong> command to easily accomplish this. The only required argument
+is the file(s) to merge together. Additionally, you can override the name of the
+timestamp column (<strong>-ts, –tscol</strong>) as well as define the output file destination
+(<strong>-o, –output</strong>).</p>
+<p>To merge together two files with the default timestamp column and output destination:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli merge -v path/file-1.csv path/file-2.csv
+</pre></div>
+</div>
+<p>If we want to go ahead and override the timestamp column to one named <strong>tstamp</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli merge -v -ts tstamp path/file-1.csv path/file-2.csv
+</pre></div>
+</div>
+<p>If we want to override the output file destination:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli merge -v -o dest-path/final-file.csv path/file-1.csv path/file-2.csv
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The timestamp column name must be the same in all files.</p>
+</div>
+</div>
+<div class="section" id="flag-data">
+<h3>Flag Data<a class="headerlink" href="#flag-data" title="Permalink to this headline">¶</a></h3>
+<p>While all raw data files contain a <strong>flag</strong> column, the <strong>flag</strong> command provides
+an easy way to set additional flags. This method <strong>WILL NOT</strong> remove the data, but
+it will set a flag that can be removed with the <strong>expunge</strong> command detailed below.
+There are four required arguments: the file path, the column name, the comparator,
+and the value. The goal is to make it easy to flag all data that falls outside
+some threshold range based on your domain knowledge and intuition. The column
+must be named identically to a column in the file otherwise an exception will be raised.</p>
+<p>The comparators that can be chosen/used are:</p>
+<ul class="simple">
+<li><p><strong>lt</strong> : less than ( &lt; )</p></li>
+<li><p><strong>le</strong> : less than or equal to ( &lt;= )</p></li>
+<li><p><strong>eq</strong> : equals ( == )</p></li>
+<li><p><strong>gt</strong> : greater than ( &gt; )</p></li>
+<li><p><strong>ge</strong> : greater than or equal to ( &gt;= )</p></li>
+</ul>
+<p>In addition to the required arguments, there are a few optional arguments that
+can be used inlcuding the <strong>verbosity</strong> (-v, –verbosity) and <strong>output</strong> (-o, –output)
+flags prevelant throughout this library. Last is the <strong>flag</strong> (-f, –flag) option.
+The <strong>flag</strong> option allows you to set the flag that is used where the default is the
+<strong>FLAG_ROW</strong> flag which will NaN the entire row of data. Flags are specific to each sensor
+and you should look up the options for your sensor in the sensors documentation. However,
+there are several flags that can be used and are (as of June 2020) the same for
+all sensors:</p>
+<ul class="simple">
+<li><p><strong>FLAG_OPC</strong> will NaN all particle data</p></li>
+<li><p><strong>FLAG_CO</strong> will NaN all CO data</p></li>
+<li><p><strong>FLAG_CO2</strong> will NaN all CO2 data</p></li>
+<li><p><strong>FLAG_NO</strong> will NaN all NO data</p></li>
+<li><p><strong>FLAG_NO2</strong> will NaN all NO2 data</p></li>
+<li><p><strong>FLAG_O3</strong> will NaN all O3 data</p></li>
+</ul>
+<p>Examples:</p>
+<p>If we want to flag all rows where the <strong>co_ae</strong> column is less than 500 mV:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli flag -v file-1.csv co_ae lt <span class="m">500</span>
+</pre></div>
+</div>
+<p>If we want to eliminate only the CO data with the same conditions, we would need to
+just change the flag we want to use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli flag -v -f FLAG_CO file-1.csv co_ae lt <span class="m">500</span>
+</pre></div>
+</div>
+<p>It is quite possible that you will want to use multiple filters but only save
+one file. The <strong>flag</strong> command only allows one set of commands at a time for now,
+but you can easily accomplish this by using the previous output file path as the input
+to the second command. Here, we filter out the entire row where <strong>co_ae</strong> is either
+less than 500 mV or greater than 3300 mV:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli flag -v -o output.csv file-1.csv co_ae lt <span class="m">500</span>
+$ quantaq-cli flag -v -o final.csv output.csv co_ae gt <span class="m">3300</span>
+</pre></div>
+</div>
+<p>Using this approach, complex workflows can be built.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are plans to support various statistical methods for flagging outliers.
+If you have recomendations or thoughts, please add an issue to the GitHub repository.</p>
+</div>
+</div>
+<div class="section" id="expunge-data">
+<h3>Expunge Data<a class="headerlink" href="#expunge-data" title="Permalink to this headline">¶</a></h3>
+<p>All raw data files have a <strong>flag</strong> column that contains a single integer with several
+flag values combined as a bitmask. To clean this data, we use the <strong>expunge</strong> command.
+When we say <em>clean</em>, what we mean is that the columns associated with a given flag
+are set to NaN’s whenever that flag is set. For more information on the sensor-specific
+flags, please check out your sensors documentation.</p>
+<p>There are a few additional options available for this command including <strong>-d, –dry-run</strong>
+which will generate the flag report and print it out to the terminal screen
+without saving the final data file, as well as the same <strong>-o, –output</strong> flag
+to define the output file path as in other commands. Last, if you are using
+your own files and have renamed the <strong>flag</strong> column, you can overrride the
+name of that column with the <strong>-f, –flag</strong> option.</p>
+<p>If you running with the verbose flag set (<strong>-v, –verbose</strong>) or with the dry-run
+(<strong>-d, –dry-run</strong>) flag set, a table with the flag report will be output to the
+terminal screen.</p>
+<p>For example, we can run the default <strong>expunge</strong> command in dry-run mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli expunge --dry-run path/file-1.csv
+</pre></div>
+</div>
+<p>When you run this, you will see a report generated which will look something
+like:</p>
+<img alt="_images/flag-output.png" src="_images/flag-output.png" />
+<p>It contains the name of each possible flag, the flag’s value, the number of
+occurences, and the percentage of time the flag was set.</p>
+<p>To run normally with all defaults:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli expunge -v path/file-1.csv
+</pre></div>
+</div>
+</div>
+<div class="section" id="resample-data">
+<h3>Resample Data<a class="headerlink" href="#resample-data" title="Permalink to this headline">¶</a></h3>
+<p>The <strong>resample</strong> command makes it easy to up- or down-sample your data
+(e.g., converting your secondly data into 5-minutely data). The only
+required columns are the <strong>FILE</strong> and the <strong>INTERVAL</strong>. The <strong>INTERVAL</strong> should be a
+string that contains both the number and sampling interval, where available sampling
+interval definitions are below:</p>
+<ul class="simple">
+<li><p><strong>M</strong> : month</p></li>
+<li><p><strong>W</strong> : week</p></li>
+<li><p><strong>d</strong>: day</p></li>
+<li><p><strong>h</strong> : hour</p></li>
+<li><p><strong>min</strong> : minute</p></li>
+<li><p><strong>s</strong> : second</p></li>
+<li><p><strong>ms</strong>: millisecond</p></li>
+</ul>
+<p>So, if you wanted to resample your data from 1-second frequency to 5-minute frequency,
+your <strong>INTERVAL</strong> would be <strong>5min</strong>.</p>
+<p>In addition to required arguments, there are a few options including the <strong>method</strong>
+(-m, –method) and the <strong>tscol</strong> (-ts, –tscol). The <strong>tscol</strong> allows you to
+override the name of the timestamp column which is <strong>timestamp</strong> by default. The
+<strong>method</strong> column allows you to override the method by which you resample, which
+defaults to <strong>mean</strong>. Available options for <strong>method</strong> are <strong>mean</strong>, <strong>median</strong>,
+<strong>sum</strong>, <strong>min</strong>, and <strong>max</strong>.</p>
+<p>Now, for some examples!</p>
+<p>If we want to take our data file which is at 10-second frequency and output a
+file that is 5-minute averaged:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli resample -v path/file-1.csv 5min
+</pre></div>
+</div>
+<p>If we want to do the same, but get the median of each 5-min interval instead of
+the mean:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli resample -v -m median path/file-1.csv 5min
+</pre></div>
+</div>
+<p>What if we have a different timestamp colum named <strong>col_time</strong> and want the 24 hour average?</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli resample -v -ts col_time path/file-1.csv 24h
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When resampling your data, any non-numeric columns will be dropped.</p>
+</div>
+</div>
+</div>
+<div class="section" id="playbook">
+<h2>Playbook<a class="headerlink" href="#playbook" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Feather-format data. Feather is a fast, lightweight, easy-to-use binary file
+format for storing data frames that is programming-language agnostic and
+extremely efficient when working with time-series data. The process of
+converting string to python datetime objects is fairly inefficient, especially
+for large data files. Thus, if working with large files and you desire to
+manipulate time-series data, it is highly recommended that you use the
+feather file format!</p>
+<p>This is supported by this CLI by simply defining the output file with a
+file extension that is <strong>.feather</strong>.</p>
+</div>
+<p>This playbook contains an example of a common workflow for QuantAQ users - you
+have a ton of raw and final data files, and you need to concatenate them, merge
+them together, and then expunge them. We will also throw in a few optional
+flagging steps just to show you how it could be incorporated. This entire workflow
+could be automated using a tool such as <a class="reference external" href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a> or via bespoke bash commands/files.</p>
+<div class="section" id="how-to-munge-and-clean-your-data">
+<h3>How to munge and clean your data<a class="headerlink" href="#how-to-munge-and-clean-your-data" title="Permalink to this headline">¶</a></h3>
+<p>First, we will assume there is some directory containing all files with
+two subdirectories called <strong>raw</strong> and <strong>final</strong>. Additionally, we have an
+extra folder to hold our munged data:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dir/
+dir/raw/*
+dir/final/*
+dir/munged/
+</pre></div>
+</div>
+<p>We begin by concatenating together all raw files into a single file called
+<strong>dir/munged/concat-raw.feather</strong> and do the same for the final data files and
+save to <strong>dir/munged/concat-final.feather</strong>. We assume that all files in the
+respective directories are csv’s and we are using all of them.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli concat -v -o dir/munged/concat-raw.feather dir/raw/*.csv
+$ quantaq-cli concat -v -o dir/munged/concat-final.feather <span class="se">\</span>
+                dir/final/*.csv
+</pre></div>
+</div>
+<p>At this point, we have two large files. Next, we will <strong>merge</strong> the two files
+together into a single file called <strong>dir/munged/merged.feather</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli merge -v -o dir/munged/merged.feather <span class="se">\</span>
+        dir/munged/concat-raw.feather dir/munged/concat-final.feather
+</pre></div>
+</div>
+<p>Next, let’s (optionally) flag the data based on temperature to throw out
+any periods that have truly ridiculous values (which likely means the sensor
+was misbehaving):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli flag -v -o dir/munged/tmp.feather dir/munged/merged.feather <span class="se">\</span>
+        temp_manifold ge <span class="m">100</span>
+</pre></div>
+</div>
+<p>Next, we will <strong>expunge</strong> the data and set the flagged data to NaN’s:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli expunge -v -o dir/munged/expunged.feather dir/munged/tmp.feather
+</pre></div>
+</div>
+<p>At this point, we could stop as we have a file (<strong>expunged.feather</strong>) that
+contains the final, de-flagged data. However, it is likely still at a 10-second
+sample frequency which is a lot of data! Let’s go ahead and <strong>resample</strong> it
+to both 1min and 5min intervals:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ quantaq-cli resample -v -o dir/munged/final-1min.csv dir/expunged.feather 1min
+$ quantaq-cli resample -v -o dir/munged/final-5min.csv dir/expunged.feather 5min
+</pre></div>
+</div>
+<p>And that’s it! Just ~7 bash commands and you’ve gone from two directories full of data
+to 2 files that contain the final 1min and 5min sampled data!</p>
+</div>
+</div>
 </div>
 
 
@@ -57,7 +320,21 @@
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview-of-available-commands">Overview of Available Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#concatenate-files">Concatenate Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#merge-files">Merge Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flag-data">Flag Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expunge-data">Expunge Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resample-data">Resample Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#playbook">Playbook</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-munge-and-clean-your-data">How to munge and clean your data</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
 </ul>
