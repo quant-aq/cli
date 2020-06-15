@@ -5,8 +5,9 @@ from pathlib import Path
 import os
 import shutil, tempfile
 import pandas as pd
+import numpy as np
 
-from quantaq_cli.console import merge
+from quantaq_cli.console import resample
 
 
 class SetupTestCase(unittest.TestCase):
@@ -17,15 +18,15 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def test_merge_files_csv(self):
+    def test_resample_files_csv(self):
         runner = CliRunner()
-        result = runner.invoke(merge, 
+        result = runner.invoke(resample, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
-                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
-                        os.path.join(self.test_files_dir, "ref.csv"),
+                        os.path.join(self.test_files_dir, "ref.csv"), 
+                        "10min",
                     ]
                 )
         
@@ -43,21 +44,22 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
         # are the number of lines correct?
-        df1 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-1.csv"))
-        df2 = pd.read_csv(os.path.join(self.test_files_dir, "ref.csv"))
-        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+        df = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+        df['timestamp'] = df['timestamp'].map(pd.to_datetime)
+       
+        idx = df.timestamp.values
 
-        self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
-      
-    def test_merge_files_feather(self):
+        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
+
+    def test_resample_files_feather(self):
         runner = CliRunner()
-        result = runner.invoke(merge, 
+        result = runner.invoke(resample, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.feather"),
                         "-v",
-                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
-                        os.path.join(self.test_files_dir, "ref.csv"),
+                        os.path.join(self.test_files_dir, "ref.csv"), 
+                        "10min",
                     ]
                 )
         
@@ -73,3 +75,10 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".feather")
+
+        # are the number of lines correct?
+        df = pd.read_feather(os.path.join(self.test_dir, "output.feather"))
+
+        idx = df.timestamp.values
+
+        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
