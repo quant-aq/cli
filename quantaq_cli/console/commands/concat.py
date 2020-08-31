@@ -25,9 +25,10 @@ def concat_command(files, output, **kwargs):
         for f in bar:
             tmp = pd.read_csv(f)
 
-            # hack: if the number of columns is 2, we need to skip a row
-            if tmp.shape[1] == 2:
-                click.secho("Invalid header line - skipping a row", fg="red")
+            # hack to support new products with a diffrent file format
+            if tmp.columns[0] == 'deviceModel':
+                tmp = pd.read_csv(f, skiprows=3)
+            elif tmp.shape[1] == 2:
                 tmp = pd.read_csv(f, skiprows=1)
 
             data.append(tmp)

@@ -24,7 +24,7 @@ def resample_command(file, interval, output, **kwargs):
         click.secho("Files to read: {}".format(file), fg='green')
 
     # load the file
-    df = safe_load(file)
+    df, _ = safe_load(file)
 
     # if tscol needs to be made a datetime obj, do so
     if tscol not in df.columns:

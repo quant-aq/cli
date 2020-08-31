@@ -26,14 +26,14 @@ def expunge_command(file, output, **kwargs):
         click.secho("File to read: {}".format(file), fg='green')
 
     # load the file
-    df = safe_load(file)
+    df, device_model = safe_load(file)
 
     # init an array to hold the table data
     data = []
     data.append(["FLAG", "FLAG VALUE", "# OCCURENCES", "% DATA"])
 
     # get the flags (in the future, this will come from the file itself)
-    list_of_flags = FLAGS.get("v100")
+    list_of_flags = FLAGS.get(device_model)
 
     # force the flag column to be an int
     df[flagcol] = df[flagcol].astype(int)
