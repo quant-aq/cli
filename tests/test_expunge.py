@@ -86,3 +86,27 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".feather")
+
+    def test_expunge_csv_modulair(self):
+        runner = CliRunner()
+        result = runner.invoke(expunge, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "-v",
+                        os.path.join(self.test_files_dir, "modulair-pm/file1.csv"), 
+                    ]
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")

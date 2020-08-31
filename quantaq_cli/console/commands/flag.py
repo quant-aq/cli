@@ -35,7 +35,7 @@ def flag_command(file, column, comparator, value, output, **kwargs):
         click.secho("File to read: {}".format(file), fg='green')
 
     # load the file
-    df = safe_load(file)
+    df, _ = safe_load(file)
 
     # is the <column> in df.columns?
     if not column in df.columns:
