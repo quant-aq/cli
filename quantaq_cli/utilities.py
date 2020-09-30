@@ -18,16 +18,15 @@ def safe_load(fpath, **kwargs):
     else:
         raise InvalidFileExtension
 
-    tmp = pd.read_csv(fpath) if as_csv else pd.read_feather(fpath)
+    tmp = pd.read_csv(fpath, nrows=1, header=None) if as_csv else pd.read_feather(fpath)
 
-    # hack to deal with modulair format
-    if tmp.columns[0] == "deviceModel":
-        device_model = tmp.columns[1]
+    if tmp.iloc[0, 0] == "deviceModel": # hack to deal with modulair format
+        device_model = tmp.iloc[0, 1]
         tmp = pd.read_csv(fpath, skiprows=3) if as_csv else pd.read_feather(fpath, skiprows=3)
-
-    # hack to deal with bad header format
-    if tmp.shape[1] == 2:
+    elif tmp.shape[1] == 2: # hack to deal with bad header format
         tmp = pd.read_csv(fpath, skiprows=1) if as_csv else pd.read_feather(fpath, skiprows=1)
+    else:
+        tmp = pd.read_csv(fpath) if as_csv else pd.read_feather(fpath)
 
     # drop the extra column if it was added
     if "Unnamed: 0" in tmp.columns:

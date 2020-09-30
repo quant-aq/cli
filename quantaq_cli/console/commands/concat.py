@@ -23,13 +23,15 @@ def concat_command(files, output, **kwargs):
     data = []
     with click.progressbar(files, label="Parsing files") as bar:
         for f in bar:
-            tmp = pd.read_csv(f)
+            tmp = pd.read_csv(f, nrows=1, header=None)
 
-            # hack to support new products with a diffrent file format
-            if tmp.columns[0] == 'deviceModel':
+            # hack to support new products with a different file format
+            if tmp.iloc[0, 0] == 'deviceModel':
                 tmp = pd.read_csv(f, skiprows=3)
             elif tmp.shape[1] == 2:
                 tmp = pd.read_csv(f, skiprows=1)
+            else:
+                tmp = pd.read_csv(f)
 
             data.append(tmp)
 

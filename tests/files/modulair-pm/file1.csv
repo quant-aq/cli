@@ -1,6 +1,6 @@
-deviceModel,MODULAIR-PM,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-deviceID,e00fce68ce75e44b0c9a9be0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-deviceSN,MOD-PM-00001,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+deviceModel,MODULAIR-PM
+deviceID,e00fce68ce75e44b0c9a9be0
+deviceSN,MOD-PM-00001
 timestamp_iso,sample_rh,sample_temp,sample_pres,bin0,bin1,bin2,bin3,bin4,bin5,bin6,bin7,bin8,bin9,bin10,bin11,bin12,bin13,bin14,bin15,bin16,bin17,bin18,bin19,bin20,bin21,bin22,bin23,bin1MToF,bin3MToF,bin5MToF,bin7MToF,sample_period,sample_flow,opc_temp,opc_rh,opc_pm1,opc_pm25,opc_pm10,laser_status,pm1_std,pm25_std,pm10_std,pm1_env,pm25_env,pm10_env,neph_bin0,neph_bin1,neph_bin2,neph_bin3,neph_bin4,neph_bin5,flag,fw
 2020-08-30T23:16:59Z,50.44,20.29,1008.7,1.6075,0,0,0.067,0.067,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8.3333,0,0,2.48,6.02,28.09,34.63,0.15,0.341,0.363,620,0,1,2,0,1,2,210,60,12,3,1,0,0,1
 2020-08-30T23:17:04Z,50.38,20.29,1008.6,2.3915,0.2657,0.1329,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7.3333,0,0,0,2.48,6.07,28.06,34.57,0.214,0.239,0.239,620,0,0,0,0,0,0,156,44,7,2,0,0,0,1
