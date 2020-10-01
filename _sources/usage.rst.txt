@@ -42,6 +42,15 @@ If you wanted to explicitly define the individual files to concatenate, you can 
 This time, we didn't define the output path (**-o**), so the default will be used which will save the file 
 to your current working directory.
 
+Additionally, there is support for concatenating files from the on-board µSD card log files which are 
+fairly hard-to-parse txt files with a ton of embedded information. By adding the **-l, --logs** flag, you 
+can easily convert the entire directory to a single csv file that is usable and makes sense!
+
+.. code-block:: bash 
+
+    $ quantaq-cli concat -v -l -o final-logs.csv path/to/logs/*.txt
+    
+
 .. warning::
 
     Arguments must come at the **end** of the command. For this CLI, this usually means the filepath for the
@@ -91,7 +100,8 @@ While all raw data files contain a **flag** column, the **flag** command provide
 an easy way to set additional flags. This method **WILL NOT** remove the data, but 
 it will set a flag that can be removed with the **expunge** command detailed below. 
 There are four required arguments: the file path, the column name, the comparator, 
-and the value. The goal is to make it easy to flag all data that falls outside 
+and the value. Additionally, you can set the device model using the **model** keyword 
+argument. The goal is to make it easy to flag all data that falls outside 
 some threshold range based on your domain knowledge and intuition. The column 
 must be named identically to a column in the file otherwise an exception will be raised. 
 
@@ -118,6 +128,8 @@ all sensors:
 * **FLAG_NO** will NaN all NO data
 * **FLAG_NO2** will NaN all NO2 data
 * **FLAG_O3** will NaN all O3 data
+* **FLAG_NEPH** will NaN all nephelometer data (MODULAIR-PM only)
+* **FLAG_RHTP** will NaN all relative humidity, temp., and pressure data (MODULAIR-PM only)
 
 Examples:
 
@@ -167,7 +179,9 @@ flags, please check out your sensors documentation.
 There are a few additional options available for this command including **-d, --dry-run** 
 which will generate the flag report and print it out to the terminal screen 
 without saving the final data file, as well as the same **-o, --output** flag 
-to define the output file path as in other commands. Last, if you are using 
+to define the output file path as in other commands. The model of the device you 
+are trying to flag can be set with the **-m, --model** flag where the available 
+options are [**v100**, **v200**, and **modulair_pm**]. Last, if you are using 
 your own files and have renamed the **flag** column, you can overrride the 
 name of that column with the **-f, --flag** option.
 
@@ -179,7 +193,7 @@ For example, we can run the default **expunge** command in dry-run mode:
 
 .. code-block:: bash 
 
-    $ quantaq-cli expunge --dry-run path/file-1.csv
+    $ quantaq-cli expunge --dry-run -m v200 path/file-1.csv
 
 When you run this, you will see a report generated which will look something 
 like:
@@ -193,7 +207,7 @@ To run normally with all defaults:
 
 .. code-block:: bash
 
-    $ quantaq-cli expunge -v path/file-1.csv
+    $ quantaq-cli expunge -v -m v200 path/file-1.csv
 
 
 
