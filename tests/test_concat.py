@@ -49,6 +49,22 @@ class SetupTestCase(unittest.TestCase):
 
         self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
 
+    def test_concat_logfiles(self):
+        runner = CliRunner()
+        result = runner.invoke(concat, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "-v",
+                        os.path.join(self.test_files_dir, "modulair-pm/logs/000001.txt"), 
+                        os.path.join(self.test_files_dir, "modulair-pm/logs/000002.txt"),
+                    ]
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+
     def test_concat_files_feather(self):
         runner = CliRunner()
         result = runner.invoke(concat, 

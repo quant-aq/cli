@@ -22,7 +22,7 @@ FLAGS["v100"] = [
 # flags for the v200 are the same as the v100
 FLAGS["v200"] = FLAGS["v100"]
 
-FLAGS["MODULAIR-PM"] = [
+FLAGS["modulair_pm"] = [
     ("FLAG_STARTUP", 1, []),
     ("FLAG_OPC", 2, ["bin0", "bin1", "bin2", "bin3", "bin4", "bin5", "bin6", "bin7", "bin8", "bin9",
                         "bin10", "bin11", "bin12", "bin13", "bin14", "bin15", "bin16", "bin17", "bin18", "bin19",
@@ -30,5 +30,8 @@ FLAGS["MODULAIR-PM"] = [
                         "sample_period", "sample_flow", "opc_temp", "opc_rh", "opc_pm1", "opc_pm25", "opc_pm10", "laser_status"]),
     ("FLAG_NEPH", 4, ["pm1_std", "pm25_std", "pm10_std", "pm1_env", "pm25_env", "pm10_env", 
                         "neph_bin0", "neph_bin1", "neph_bin2", "neph_bin3", "neph_bin4", "neph_bin5"]),
-    ("FLAG_RHTP", 8, ["sample_rh", "sample_temp", "sample_pres"])
+    ("FLAG_RHTP", 8, ["sample_rh", "sample_temp", "sample_pres"]),
+    ("FLAG_ROW", 1024, None)
 ]
+
+SUPPORTED_MODELS = FLAGS.keys()

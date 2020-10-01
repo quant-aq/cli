@@ -3,3 +3,6 @@ class InvalidFileExtension(Exception):
 
 class InvalidArgument(Exception):
     pass
+
+class InvalidDeviceModel(Exception):
+    pass

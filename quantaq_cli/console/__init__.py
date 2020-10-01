@@ -1,5 +1,6 @@
 import click
 import pkg_resources
+from ..variables import SUPPORTED_MODELS
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -16,15 +17,19 @@ def main(ctx):
 @click.argument("files", nargs=-1, type=click.Path())
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def concat(files, output, verbose, **kwargs):
+@click.option("-l", "--logs", is_flag=True, help="Parse and save locally-saved log files.")
+def concat(files, output, verbose, logs, **kwargs):
     """Concatenate FILES together and save to OUTPUT.
 
     FILES is the collection or list of files that you are concatenating together. They 
     can be provided as a list or by using a wildcard and providing the path with wildcard.
     """
-    from .commands.concat import concat_command
+    from .commands.concat import concat_command, concat_logs_command
 
-    concat_command(files, output, verbose=verbose, **kwargs)
+    if not logs:
+        concat_command(files, output, verbose=verbose, **kwargs)
+    else:
+        concat_logs_command(files, output, verbose=verbose, **kwargs)
 
 
 @click.command("merge", short_help="merge two files together on their timestamp")
@@ -61,12 +66,13 @@ def resample(file, interval, tscol, method, output, verbose, **kwargs):
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-f", "--flag", default="flag", help="The name of the flag column", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def expunge(file, dry_run, output, flag, verbose, **kwargs):
+@click.option("-m", "--model", default="modulair_pm", help="The device model type. One of {}".format(SUPPORTED_MODELS))
+def expunge(file, dry_run, output, flag, verbose, model, **kwargs):
     """Expunge (NaN flagged values) FILE and save to OUTPUT.
     """
     from .commands.expunge import expunge_command
 
-    expunge_command(file, output, flagcol=flag, dry_run=dry_run, verbose=verbose, **kwargs)
+    expunge_command(file, output, flagcol=flag, dry_run=dry_run, verbose=verbose, model=model, **kwargs)
 
 
 @click.command("flag", short_help="flag data based on specific criteria")
@@ -77,7 +83,8 @@ def expunge(file, dry_run, output, flag, verbose, **kwargs):
 @click.option("-f", "--flag", default="FLAG_ROW", help="One of [FLAG_OPC, FLAG_CO, FLAG_NO, FLAG_NO2, FLAG_O3, FLAG_CO2, FLAG_ROW]")
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def flag(file, column, comparator, value, flag, output, verbose, **kwargs):
+@click.option("-m", "--model", default="modulair_pm", help="The device model type. One of {}".format(SUPPORTED_MODELS))
+def flag(file, column, comparator, value, flag, output, verbose, model, **kwargs):
     """Set a FLAG based on user input or statistical method.
 
     Four arguments are required:
@@ -88,7 +95,7 @@ def flag(file, column, comparator, value, flag, output, verbose, **kwargs):
     """
     from .commands.flag import flag_command
 
-    flag_command(file, column, comparator, value, output, flag=flag, verbose=verbose)
+    flag_command(file, column, comparator, value, output, flag=flag, verbose=verbose, model=model)
 
 
 # add the commands one-by-one
