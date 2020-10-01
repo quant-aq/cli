@@ -25,7 +25,7 @@ def merge_command(files, output, **kwargs):
     df = pd.DataFrame()
     with click.progressbar(files, label="Parsing files") as bar:
         for f in bar:
-            tmp, _ = safe_load(f)
+            tmp = safe_load(f)
 
             # check for the column name
             if not tscol in tmp.columns:

@@ -4,20 +4,25 @@ import numpy as np
 import click
 from terminaltables import SingleTable
 
-from ...exceptions import InvalidFileExtension
+from ...exceptions import InvalidFileExtension, InvalidDeviceModel
 from ...utilities import safe_load
-from ...variables import FLAGS
+from ...variables import FLAGS, SUPPORTED_MODELS
 
 
 def expunge_command(file, output, **kwargs):
     verbose = kwargs.pop("verbose", False)
     dry_run = kwargs.pop("dry_run", False)
     flagcol = kwargs.pop("flagcol", "flag")
+    model   = kwargs.pop("model", "modulair_pm")
 
     # make sure the extension is either a csv or feather format
     output = Path(output)
     if output.suffix not in (".csv", ".feather"):
         raise InvalidFileExtension("Invalid file extension")
+
+    # ensure the model is valid
+    if model not in SUPPORTED_MODELS:
+        raise InvalidDeviceModel("Invalid device model. Must be one of {}".format(SUPPORTED_MODELS))
 
     save_as_csv = True if output.suffix == ".csv" else False
 
@@ -26,14 +31,17 @@ def expunge_command(file, output, **kwargs):
         click.secho("File to read: {}".format(file), fg='green')
 
     # load the file
-    df, device_model = safe_load(file)
+    df = safe_load(file)
+
+    if verbose:
+        click.echo("Expunging data for {}".format(model))
 
     # init an array to hold the table data
     data = []
     data.append(["FLAG", "FLAG VALUE", "# OCCURENCES", "% DATA"])
 
     # get the flags (in the future, this will come from the file itself)
-    list_of_flags = FLAGS.get(device_model)
+    list_of_flags = FLAGS.get(model)
 
     # force the flag column to be an int
     df[flagcol] = df[flagcol].astype(int)

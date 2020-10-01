@@ -8,9 +8,6 @@ def safe_load(fpath, **kwargs):
     """
     p = Path(fpath)
 
-    # default device model
-    device_model = "v100"
-
     if p.suffix == ".csv":
         as_csv = True
     elif p.suffix == ".feather":
@@ -32,4 +29,4 @@ def safe_load(fpath, **kwargs):
     if "Unnamed: 0" in tmp.columns:
         del tmp["Unnamed: 0"]
 
-    return tmp, device_model
+    return tmp
