@@ -122,10 +122,6 @@ def concat_logs_command(files, output, **kwargs):
     rv = pd.concat(rv)
     del rv["group"]
 
-    # try sorting based on a time column
-    if "timestamp" in rv.columns:
-        rv = rv.sort_values(by='timestamp')
-
     if rv.empty:
         raise Exception("No data")
 
