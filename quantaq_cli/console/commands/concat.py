@@ -106,8 +106,6 @@ def concat_logs_command(files, output, **kwargs):
 
     rv = []
 
-    data = data.head(50)
-
     for _, grp in data.groupby("group"):
         t0 = None
 

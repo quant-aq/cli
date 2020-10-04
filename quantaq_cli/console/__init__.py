@@ -35,7 +35,7 @@ def concat(files, output, verbose, logs, **kwargs):
 
 @click.command("merge", short_help="merge two files together on their timestamp")
 @click.argument("files", nargs=-1, type=click.Path())
-@click.option("-ts", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
+@click.option("-ts", "--tscol", default="timestamp_iso", help="The column by which to join the files", type=str)
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
 def merge(files, tscol, output, verbose, **kwargs):
