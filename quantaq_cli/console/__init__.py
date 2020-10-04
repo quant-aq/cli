@@ -6,6 +6,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 __version__ = pkg_resources.get_distribution('quantaq_cli').version
 
+
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option(__version__)
 @click.pass_context
