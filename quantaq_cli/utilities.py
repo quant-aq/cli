@@ -18,7 +18,6 @@ def safe_load(fpath, **kwargs):
     tmp = pd.read_csv(fpath, nrows=1, header=None) if as_csv else pd.read_feather(fpath)
 
     if tmp.iloc[0, 0] == "deviceModel": # hack to deal with modulair format
-        device_model = tmp.iloc[0, 1]
         tmp = pd.read_csv(fpath, skiprows=3) if as_csv else pd.read_feather(fpath, skiprows=3)
     elif tmp.shape[1] == 2: # hack to deal with bad header format
         tmp = pd.read_csv(fpath, skiprows=1) if as_csv else pd.read_feather(fpath, skiprows=1)
