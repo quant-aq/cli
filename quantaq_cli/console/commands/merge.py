@@ -9,7 +9,7 @@ from ...utilities import safe_load
 
 def merge_command(files, output, **kwargs):
     verbose = kwargs.pop("verbose", False)
-    tscol   = kwargs.pop("tscol", "timestamp")
+    tscol   = kwargs.pop("tscol", "timestamp_iso")
 
     # make sure the extension is either a csv or feather format
     output = Path(output)
@@ -32,23 +32,26 @@ def merge_command(files, output, **kwargs):
 
             # check for the column name
             if not tscol in tmp.columns:
-                click.secho("Time tscol was not found in the file.", fg='red')
+                click.secho("Time tscol was not found in the file; skipping file.", fg='red')
                 continue
                 
             # convert the timestamp column to a pandas datetime
-            if type(tmp[tscol]) != np.datetime64:
-                tmp[tscol] = tmp[tscol].map(pd.to_datetime)
+            if not pd.core.dtypes.common.is_datetime_or_timedelta_dtype(tmp[tscol]):
+                tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='coerce'))
+            
+            # drop the bad rows
+            tmp = tmp.dropna(how='any', subset=[tscol])
+
+            # re-convert to timestamp in case it's not
+            if not pd.core.dtypes.common.is_datetime_or_timedelta_dtype(tmp[tscol]):
+                tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='raise'))
+            
+            # localize the timezone if needed
+            tmp[tscol] = tmp[tscol].apply(lambda x: x.tz_localize("UTC") if not x.tzinfo else x)
 
             # set the index
             tmp.set_index(tscol, inplace=True)
-            
-            # force to UTC
-            if tscol == "timestamp":
-                try:
-                    tmp.index = tmp.index.tz_localize("UTC")
-                except TypeError:
-                    pass
-            
+
             # merge with the other files
             df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer')       
 

@@ -102,7 +102,7 @@ def concat_logs_command(files, output, **kwargs):
 
     # group data
     data["group"] = (data.millis - data.millis.shift(1) < -1000).cumsum()
-    data["timestamp"] = np.nan
+    data["timestamp_iso"] = np.nan
 
     rv = []
 
@@ -122,7 +122,7 @@ def concat_logs_command(files, output, **kwargs):
         if t0:
             millis0 = idx["millis"].values[0]
 
-            grp.loc[:, "timestamp"] = grp["millis"].apply(lambda x: t0 + pd.Timedelta(x - millis0, unit='millis'))
+            grp.loc[:, "timestamp_iso"] = grp["millis"].apply(lambda x: t0 + pd.Timedelta(x - millis0, unit='millis'))
 
             rv.append(grp)
 

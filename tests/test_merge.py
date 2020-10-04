@@ -26,7 +26,8 @@ class SetupTestCase(unittest.TestCase):
                         "-v",
                         os.path.join(self.test_files_dir, "lcs-1.csv"), 
                         os.path.join(self.test_files_dir, "ref.csv"),
-                    ]
+                    ],
+                    catch_exceptions=False
                 )
         
         # did it succeed?
