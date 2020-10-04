@@ -6,7 +6,7 @@ import os
 import shutil, tempfile
 import pandas as pd
 
-from quantaq_cli.console import merge
+from quantaq_cli.console import merge, concat
 
 
 class SetupTestCase(unittest.TestCase):
@@ -73,3 +73,40 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".feather")
+
+    def test_concat_then_merge(self):
+        runner = CliRunner()
+        res1 = runner.invoke(concat,
+            [
+                "-o",
+                os.path.join(self.test_dir, "concat1.csv"),
+                os.path.join(self.test_files_dir, "modulair-pm/file1.csv"),
+                os.path.join(self.test_files_dir, "modulair-pm/file2.csv"),
+            ]
+        )
+
+        self.assertEqual(res1.exit_code, 0)
+
+        res2 = runner.invoke(concat,
+            [
+                "-o",
+                os.path.join(self.test_dir, "concat2.csv"),
+                "-l",
+                os.path.join(self.test_files_dir, "modulair-pm/logs/000001.txt"),
+                os.path.join(self.test_files_dir, "modulair-pm/logs/000002.txt"),
+            ]
+        )
+
+        self.assertEqual(res2.exit_code, 0)
+
+        res3 = runner.invoke(merge,
+            [
+                "-o",
+                os.path.join(self.test_dir, "final.csv"),
+                os.path.join(self.test_dir, "concat1.csv"), 
+                os.path.join(self.test_dir, "concat2.csv"),
+            ],
+            catch_exceptions=False
+        )
+
+        self.assertEqual(res3.exit_code, 0)

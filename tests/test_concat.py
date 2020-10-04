@@ -26,7 +26,8 @@ class SetupTestCase(unittest.TestCase):
                         "-v",
                         os.path.join(self.test_files_dir, "lcs-1.csv"), 
                         os.path.join(self.test_files_dir, "lcs-2.csv"),
-                    ]
+                    ],
+                    catch_exceptions=False
                 )
         
         # did it succeed?
@@ -55,13 +56,15 @@ class SetupTestCase(unittest.TestCase):
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "-l",
                         os.path.join(self.test_files_dir, "modulair-pm/logs/000001.txt"), 
                         os.path.join(self.test_files_dir, "modulair-pm/logs/000002.txt"),
-                    ]
+                    ],
+                    catch_exceptions=False
                 )
         
         # did it succeed?
+        print (result.stdout)
         self.assertEqual(result.exit_code, 0)
 
 

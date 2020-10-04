@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -76,24 +79,26 @@ def concat_logs_command(files, output, **kwargs):
     # read all files
     data = []
     with click.progressbar(files, label="Parsing files") as bar:
-        for f in bar:
-            for line in open(f, "r"):
-                items = line.split(":")
-                pre, msg = items[0], items[1:]
+        for each in bar:
+            with open(each, "r", errors='ignore') as f:
+                for line in f:
+                    line = line.split(":")
+                    
+                    x, y = line[0], line[1:]
 
-                msg = ":".join(msg).strip("\n")
+                    y = ":".join(y).strip()
 
-                try:
-                    millis, location, level = re.split("[ ]", pre)
-                except:
-                    continue
-                
-                location = location[1:-1]
+                    try:
+                        millis, location, level = re.split("[ ]", x)
+                    except:
+                        continue
+                    
+                    location = location[1:-1]
 
-                data.append(dict(millis=int(millis), location=location, level=level, message=msg))
+                    data.append(dict(millis=int(millis), location=location, level=level, message=y))
     
     # concat all results
-    data = pd.DataFrame.from_dict(data)
+    data = pd.DataFrame(data)
 
     # group data
     data["group"] = (data.millis - data.millis.shift(1) < -1000).cumsum()
@@ -101,7 +106,9 @@ def concat_logs_command(files, output, **kwargs):
 
     rv = []
 
-    for i, grp in data.groupby("group"):
+    data = data.head(50)
+
+    for _, grp in data.groupby("group"):
         t0 = None
 
         idx = grp[grp["message"].str.contains("Current time", regex=False)]
