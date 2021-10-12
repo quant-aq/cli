@@ -25,9 +25,6 @@ def merge_command(files, output, **kwargs):
     df = pd.DataFrame()
     with click.progressbar(files, label="Parsing files") as bar:
         for f in bar:
-            if verbose:
-                click.secho("Now reading {}".format(f), fg='green')
-
             tmp = safe_load(f)
 
             # check for the column name
