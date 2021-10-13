@@ -46,9 +46,10 @@ jobs:
                 make html
                 cd ..
             
-            - name: deploy to gh-pages
-              uses: Cecilapp/GitHub-Pages-deploy@v2
+            - name: Deploy to GitHub Pages
+              uses: Cecilapp/GitHub-Pages-deploy@v3
               env:
-                EMAIL: dhagan@mit.edu
-                GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-                BUILD_DIR: docs/_build/html
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                email: dhagan@mit.edu
+                build_dir: docs/_build/html
