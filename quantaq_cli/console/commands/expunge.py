@@ -14,7 +14,7 @@ def expunge_command(file, output, **kwargs):
     dry_run = kwargs.pop("dry_run", False)
     flagcol = kwargs.pop("flagcol", "flag")
     model   = kwargs.pop("model", "modulair_pm")
-    table = kwargs.pop("table", False)
+    table   = kwargs.pop("table", False)
 
     # make sure the extension is either a csv or feather format
     output = Path(output)
@@ -65,11 +65,11 @@ def expunge_command(file, output, **kwargs):
         data.append([label, value, n_affected, pct_affected])
 
     if dry_run or verbose:
-        table = SingleTable(data)
-        table.title = "Flag Breakdown".upper()
+        tbl = SingleTable(data)
+        tbl.title = "Flag Breakdown".upper()
 
-        if table == True:
-            click.echo(table.table)
+        if table:
+            click.echo(tbl.table)
         else:
             for item in data:
                 click.echo(item)

@@ -24,8 +24,8 @@ class SetupTestCase(unittest.TestCase):
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
-                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
-                        os.path.join(self.test_files_dir, "ref.csv"),
+                        os.path.join(self.test_files_dir, "modulair/MOD-raw.csv"), 
+                        os.path.join(self.test_files_dir, "modulair/MOD-final.csv"),
                     ],
                     catch_exceptions=False
                 )
@@ -44,8 +44,8 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
         # are the number of lines correct?
-        df1 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-1.csv"), index_col=0)
-        df2 = pd.read_csv(os.path.join(self.test_files_dir, "ref.csv"), index_col=0)
+        df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-raw.csv"), index_col=0)
+        df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-final.csv"), index_col=0)
         df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
 
         self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])

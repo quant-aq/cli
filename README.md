@@ -51,7 +51,7 @@ All tests are automagically run via GitHub actions and reports are uploaded dire
 
 
 ```sh
-$ poetry run coverage run -m unittest discover
+$ poetry run pytest --cov=./ --cov-report=xml -rP
 ```
 
 ## Development
