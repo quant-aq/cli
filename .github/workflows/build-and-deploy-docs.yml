@@ -1,9 +1,7 @@
 name: docs/gh-pages
 on:
-  push
-  # create:
-  #   tags:
-  #     - v*
+  release:
+    types: [released]
 
 jobs:
     build-docs:
