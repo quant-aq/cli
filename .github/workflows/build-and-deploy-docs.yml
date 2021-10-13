@@ -47,7 +47,7 @@ jobs:
                 cd ..
             
             - name: deploy to gh-pages
-              uses: Cecilapp/GitHub-Pages-deploy@master
+              uses: Cecilapp/GitHub-Pages-deploy@v2
               env:
                 EMAIL: dhagan@mit.edu
                 GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
