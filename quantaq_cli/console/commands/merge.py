@@ -11,6 +11,9 @@ def merge_command(files, output, **kwargs):
     verbose = kwargs.pop("verbose", False)
     tscol   = kwargs.pop("tscol", "timestamp_iso")
 
+    # create an array of timestamp column names to try
+    tscols = [tscol, "timestamp", "timestamp_local"]
+
     # make sure the extension is either a csv or feather format
     output = Path(output)
     if output.suffix not in (".csv", ".feather"):
@@ -25,12 +28,14 @@ def merge_command(files, output, **kwargs):
     df = pd.DataFrame()
     with click.progressbar(files, label="Parsing files") as bar:
         for f in bar:
-            if verbose:
-                click.secho("Now reading {}".format(f), fg='green')
-
             tmp = safe_load(f)
 
-            # check for the column name
+            # check for the column name and set to best guess
+            for c in tscols:
+                if c in tmp.columns:
+                    tscol = c
+                    break
+                
             if not tscol in tmp.columns:
                 click.secho("Time tscol was not found in the file; skipping file.", fg='red')
                 continue

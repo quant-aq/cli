@@ -67,7 +67,6 @@ class SetupTestCase(unittest.TestCase):
         print (result.stdout)
         self.assertEqual(result.exit_code, 0)
 
-
     def test_concat_files_feather(self):
         runner = CliRunner()
         result = runner.invoke(concat, 
@@ -93,7 +92,7 @@ class SetupTestCase(unittest.TestCase):
         # is it a csv?
         self.assertEqual(p.suffix, ".feather")
 
-    def test_concat_files_modulair(self):
+    def test_concat_files_mod_pm(self):
         runner = CliRunner()
         result = runner.invoke(concat, 
                     [
