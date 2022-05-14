@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [3.6, 3.7, 3.8]
+        python: ["3.6", "3.7", "3.8", "3.9"]
     name: Python ${{ matrix.python }} tests
     steps:
       - name: Checkout branch
@@ -17,17 +17,31 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install poetry
-        uses: snok/install-poetry@v1.1.1
+        uses: snok/install-poetry@v1
         with:
-          version: 1.1.4
-          create_virtualenvs: true
+          version: 1.1.10
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       
       - name: Install dependencies
-        run: poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install library
+        run: poetry install --no-interaction
 
       - name: Run tests and generate coverage report
         run: |
-          poetry run pytest tests/ --cov=./ --cov-report=xml
+          source .venv/bin/activate
+          pytest tests/ --cov=./ --cov-report=xml
           
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
