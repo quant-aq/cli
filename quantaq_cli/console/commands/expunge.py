@@ -45,7 +45,10 @@ def expunge_command(file, output, **kwargs):
     list_of_flags = FLAGS.get(model)
 
     # force the flag column to be an int
-    df[flagcol] = df[flagcol].astype(int)
+    df[flagcol] = df[flagcol].astype(int, errors='ignore')
+
+    # Drop NaNs
+    df = df.dropna(how='any', subset=[flagcol])
 
     for label, value, cols in list_of_flags:
         mask = df[flagcol] & value == value
