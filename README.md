@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/quantaq-cli.svg)](https://badge.fury.io/py/quantaq-cli)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/quantaq-cli)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/quant-aq/cli/blob/master/LICENSE)
+[![license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/quant-aq/cli/blob/master/LICENSE)
 ![run and build](https://github.com/quant-aq/cli/workflows/run%20and%20build/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/quant-aq/cli/branch/master/graph/badge.svg)](https://codecov.io/gh/quant-aq/cli)
 
@@ -62,7 +62,7 @@ Development takes place on GitHub. Issues and bugs can be submitted and tracked 
 
 ## License
 
-Copyright &copy; 2020-2021 QuantAQ, Inc.
+Copyright &copy; 2020-2022 QuantAQ, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
