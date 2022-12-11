@@ -11,7 +11,8 @@ on their complete functionality in the :doc:`api`.
 * **merge** allows you to combine a number of files together based on their timestamp
 * **resample** helps you up- or down-sample your data
 * **expunge** sets all flagged data to NaN's 
-* **flag** allows you to drop rows based on specific criteria or statistical methods (**coming soon**)
+* **flag** allows you to drop rows based on specific criteria
+* **clean** allows you to remove corrupt data and force columns to their proper data type
 
 
 Overview of Available Commands
@@ -264,6 +265,22 @@ What if we have a different timestamp colum named **col_time** and want the 24 h
 .. warning:: 
 
     When resampling your data, any non-numeric columns will be dropped.
+
+
+Clean Data
+^^^^^^^^^^
+
+The **clean** command removes any corrupt data from a file and forces the column 
+types to their desired dtype to reduce storage requirements. The command only works on single 
+files (as of now) and it drops any records that have any corrupt data. 
+
+Below is an quick example demonstrating how the **clean** command can be used to clean up 
+a corrupt data file.
+
+.. code-block::
+
+    $ quantaq-cli clean raw/sensor-file.csv munged/sensor-file.csv 
+
 
 
 Playbook

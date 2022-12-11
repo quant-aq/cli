@@ -1,4 +1,4 @@
-import click
+import rich_click as click
 import pkg_resources
 from ..variables import SUPPORTED_MODELS
 
@@ -100,9 +100,24 @@ def flag(file, column, comparator, value, flag, output, verbose, model, **kwargs
     flag_command(file, column, comparator, value, output, flag=flag, verbose=verbose, model=model)
 
 
+@click.command("clean")
+@click.argument("filepath", nargs=1, type=click.Path())
+@click.argument("savepath", nargs=1, type=click.Path())
+def clean(filepath, savepath, **kwargs):
+    """Clean FILEPATH and save to SAVEPATH.
+    
+    Remove corrupt data and force columns to be the 
+    desired column type based on the specific column.
+    """
+    from .commands.munge import clean_file
+    
+    clean_file(filepath, savepath, **kwargs)
+
+
 # add the commands one-by-one
 main.add_command(concat)
 main.add_command(merge)
 main.add_command(resample)
 main.add_command(expunge)
 main.add_command(flag)
+main.add_command(clean)

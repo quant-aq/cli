@@ -17,10 +17,8 @@ Full documentation can be found [here](https://quant-aq.github.io/cli/).
 This tool is built for Python 3.6.1+ and has the following key dependencies
 
 ```
-python = "^3.6.1"
-pandas = "^1.0.4"
-click = "^7.1.2"
-pyarrow = "^0.17.1"
+python = ">=3.8,<4.0"
+pandas = ">=1.0.4"
 ```
 
 More details can be found in the `pyproject.toml` file at the base of this repository.
@@ -62,7 +60,7 @@ Development takes place on GitHub. Issues and bugs can be submitted and tracked 
 
 ## License
 
-Copyright &copy; 2020-2022 QuantAQ, Inc.
+Copyright &copy; 2020-2023 QuantAQ, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
