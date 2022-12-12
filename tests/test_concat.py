@@ -46,9 +46,13 @@ class SetupTestCase(unittest.TestCase):
         # are the number of lines correct?
         df1 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-1.csv"))
         df2 = pd.read_csv(os.path.join(self.test_files_dir, "lcs-2.csv"), skiprows=1)
-        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")).sort_values('timestamp')
 
         self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
+
+        # Are the timestamps correct?
+        for i, (_, r) in enumerate(df2.sort_values('timestamp').head().iterrows()):
+            self.assertEqual(r['timestamp'], df3.loc[i, "timestamp"])
 
     def test_concat_logfiles(self):
         runner = CliRunner()
