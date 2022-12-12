@@ -36,10 +36,10 @@ Testing
 
 .. code-block:: shell
 
-    $ poetry run coverage run -m unittest discover
+    $ poetry run pytest -rP
 
-We support a number of Python versions. Currently, we support and test for 3.6, 
-3.7, and 3.8. These tests are automated and run as GitHub actions on every 
+We support a number of Python versions. Currently, we support and test for 3.8, 
+3.9, and 3.10. These tests are automated and run as GitHub actions on every 
 pull request.
 
 .. _issue tracker: https://github.com/quant-aq/cli/issues
