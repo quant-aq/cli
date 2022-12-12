@@ -1,8 +1,7 @@
 name: docs/gh-pages
 on:
   release:
-    # types: [released]
-    types: [workflow_dispatch]
+    types: [workflow_dispatch, released]
 
 jobs:
     build-docs:
