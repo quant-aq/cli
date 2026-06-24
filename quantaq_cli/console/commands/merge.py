@@ -44,14 +44,10 @@ def merge_command(files, output, **kwargs):
             # convert the timestamp column to a pandas datetime
             if not (is_datetime64_any_dtype(tmp[tscol]) or is_timedelta64_dtype(tmp[tscol])):
                 tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='coerce'))
-            
+
             # drop the bad rows
             tmp = tmp.dropna(how='any', subset=[tscol])
 
-            # re-convert to timestamp in case it's not
-            if not (is_datetime64_any_dtype(tmp[tscol]) or is_timedelta64_dtype(tmp[tscol])):
-                tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='raise'))
-            
             # localize the timezone if needed
             tmp[tscol] = tmp[tscol].apply(lambda x: x.tz_localize("UTC") if not x.tzinfo else x)
 
