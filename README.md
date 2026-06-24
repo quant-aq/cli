@@ -14,11 +14,11 @@ Full documentation can be found [here](https://quant-aq.github.io/cli/).
 
 ## Dependencies
 
-This tool is built for Python 3.6.1+ and has the following key dependencies
+This tool is built for Python 3.9+ and has the following key dependencies
 
 ```
-python = ">=3.8,<4.0"
-pandas = ">=1.0.4"
+python = ">=3.9, <3.14"
+pandas = ">=2.1.4,<2.2"
 ```
 
 More details can be found in the `pyproject.toml` file at the base of this repository.
