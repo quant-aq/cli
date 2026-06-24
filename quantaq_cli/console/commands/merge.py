@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype, is_timedelta64_dtype
 import numpy as np
 import click
 
@@ -41,16 +42,12 @@ def merge_command(files, output, **kwargs):
                 continue
                 
             # convert the timestamp column to a pandas datetime
-            if not pd.core.dtypes.common.is_datetime_or_timedelta_dtype(tmp[tscol]):
+            if not (is_datetime64_any_dtype(tmp[tscol]) or is_timedelta64_dtype(tmp[tscol])):
                 tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='coerce'))
-            
+
             # drop the bad rows
             tmp = tmp.dropna(how='any', subset=[tscol])
 
-            # re-convert to timestamp in case it's not
-            if not pd.core.dtypes.common.is_datetime_or_timedelta_dtype(tmp[tscol]):
-                tmp[tscol] = tmp[tscol].apply(lambda x: pd.to_datetime(x, errors='raise'))
-            
             # localize the timezone if needed
             tmp[tscol] = tmp[tscol].apply(lambda x: x.tz_localize("UTC") if not x.tzinfo else x)
 
