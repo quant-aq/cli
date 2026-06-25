@@ -17,11 +17,11 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def test_clean_file(self):
+    def test_clean_file_arisense_db(self):
         runner = CliRunner()
         result = runner.invoke(clean, 
                     [
-                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
+                        os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
                         os.path.join(self.test_dir, "output.csv"),
                     ],
                     catch_exceptions=False
@@ -36,3 +36,44 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".csv")
+
+    def test_clean_file_modulairpm_rawsd(self):
+        runner = CliRunner()
+        result = runner.invoke(clean, 
+                    [
+                        os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), 
+                        os.path.join(self.test_dir, "output.csv"),
+                    ],
+                    catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+    def test_clean_file_modulairx_cloudapi(self):
+        runner = CliRunner()
+        result = runner.invoke(clean, 
+                    [
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
+                        os.path.join(self.test_dir, "output.csv"),
+                    ],
+                    catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+        

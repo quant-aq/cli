@@ -25,7 +25,7 @@ class SetupTestCase(unittest.TestCase):
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
-                        os.path.join(self.test_files_dir, "ref.csv"), 
+                        os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
                         "10min",
                     ]
                 )
@@ -58,7 +58,7 @@ class SetupTestCase(unittest.TestCase):
                         "-o",
                         os.path.join(self.test_dir, "output.feather"),
                         "-v",
-                        os.path.join(self.test_files_dir, "ref.csv"), 
+                        os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
                         "10min",
                     ]
                 )
