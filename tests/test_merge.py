@@ -17,15 +17,15 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def test_merge_files_csv(self):
+    def test_merge_files_modulair_db(self):
         runner = CliRunner()
         result = runner.invoke(merge, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
-                        os.path.join(self.test_files_dir, "modulair/MOD-raw.csv"), 
-                        os.path.join(self.test_files_dir, "modulair/MOD-final.csv"),
+                        os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
+                        os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"),
                     ],
                     catch_exceptions=False
                 )
@@ -44,8 +44,8 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
         # are the number of lines correct?
-        df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-raw.csv"), index_col=0)
-        df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-final.csv"), index_col=0)
+        df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), index_col=0)
+        df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"), index_col=0)
         df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
 
         self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
@@ -57,8 +57,8 @@ class SetupTestCase(unittest.TestCase):
                         "-o",
                         os.path.join(self.test_dir, "output.feather"),
                         "-v",
-                        os.path.join(self.test_files_dir, "lcs-1.csv"), 
-                        os.path.join(self.test_files_dir, "ref.csv"),
+                        os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
+                        os.path.join(self.test_files_dir, "arisense/ref/ref.csv"),
                     ]
                 )
         
@@ -81,8 +81,8 @@ class SetupTestCase(unittest.TestCase):
             [
                 "-o",
                 os.path.join(self.test_dir, "concat1.csv"),
-                os.path.join(self.test_files_dir, "modulair-pm/file1.csv"),
-                os.path.join(self.test_files_dir, "modulair-pm/file2.csv"),
+                os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"),
+                os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file2.csv"),
             ]
         )
 
@@ -111,3 +111,72 @@ class SetupTestCase(unittest.TestCase):
         )
 
         self.assertEqual(res3.exit_code, 0)
+
+    def test_merge_files_modulairx_rawsd(self):
+            runner = CliRunner()
+            result = runner.invoke(merge, 
+                        [
+                            "-o",
+                            os.path.join(self.test_dir, "output.csv"),
+                            "-v",
+                            os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
+                            os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"),
+                        ],
+                        catch_exceptions=False
+                    )
+            
+            # did it succeed?
+            self.assertEqual(result.exit_code, 0)
+
+            # did it output the correct text?
+            self.assertTrue("Saving file" in result.output)
+
+            # make sure the file exists
+            p = Path(self.test_dir + "/output.csv")
+            self.assertTrue(p.exists())
+            
+            # is it a csv?
+            self.assertEqual(p.suffix, ".csv")
+
+            # are the number of lines correct?
+            df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), skiprows=3)
+            df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"), skiprows=3)
+            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+
+            print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
+            self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
+
+    def test_merge_files_modulairx_cloudapi(self):
+            runner = CliRunner()
+            result = runner.invoke(merge, 
+                        [
+                            "-o",
+                            os.path.join(self.test_dir, "output.csv"),
+                            "-v",
+                            os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
+                            os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"),
+                        ],
+                        catch_exceptions=False
+                    )
+            
+            # did it succeed?
+            self.assertEqual(result.exit_code, 0)
+
+            # did it output the correct text?
+            self.assertTrue("Saving file" in result.output)
+
+            # make sure the file exists
+            p = Path(self.test_dir + "/output.csv")
+            self.assertTrue(p.exists())
+            
+            # is it a csv?
+            self.assertEqual(p.suffix, ".csv")
+
+            # are the number of lines correct?
+            df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
+            df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
+            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+
+            print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
+            self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
+            
