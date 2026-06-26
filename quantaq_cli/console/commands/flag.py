@@ -1,27 +1,95 @@
 from pathlib import Path
+
+import click
 import pandas as pd
 import numpy as np
-import click
+from loguru import logger
 from terminaltables import SingleTable
 
+from ...variables import FLAGS, get_flag_criteria, SUPPORTED_MODELS, SUPPORTED_SOURCES
+from ...variables import Range, Gap
+from ...utilities import determine_timestamp_column, safe_load
 from ...exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
-from ...utilities import safe_load
-from ...variables import FLAGS, SUPPORTED_MODELS
-
-import operator
-
-ops = {
-    'eq': operator.eq, 
-    'lt': operator.lt, 
-    'le': operator.le, 
-    'gt': operator.gt, 
-    'ge': operator.ge
-    }
 
 
-def flag_command(file, column, comparator, value, output, **kwargs):
+def add_flag(df, flag_name, criterion, bit):
+    if isinstance(criterion, Range):
+        col = df[criterion.column]
+        mask = (col < criterion.lo) | (col > criterion.hi)
+        if not mask.sum():
+            return df
+        df.loc[mask, "flag"] |= bit
+        logger.info(
+                f"Flagged: {flag_name} (flag {bit}) --> {mask.sum()} rows",
+            )
+        return df
+
+    if isinstance(criterion, Gap):
+        # Find best timestamp column.
+        tscol = determine_timestamp_column(df)
+
+        # Force timestamp type
+        df[tscol] = df[tscol].map(pd.to_datetime)
+
+        # Sort by timestamp
+        df = df.sort_values(tscol)
+
+        # Create a column to hold the time diff
+        df["tdiff"] = df[tscol].diff().dt.total_seconds()
+
+        # If we're missing enough data, apply the startup flag.
+        startup_mask = df["tdiff"] > criterion.gap_in_seconds
+        starts = df.loc[startup_mask]
+        postgap_delta = pd.Timedelta(seconds=criterion.post_gap_flag_length_seconds)
+
+        for _, row in starts.iterrows():
+            # Flag everything between the startup flag's timestamp up to the gap.
+            mask = (df[tscol] >= row[tscol]) & (
+                df[tscol] <= (row[tscol] + postgap_delta)
+            )
+            df.loc[mask, "flag"] |= bit  
+            logger.info(
+                f"Flagged: {flag_name} (flag {bit}) --> {mask.sum()} rows",
+            )
+
+        # Delete the tdiff col
+        del df["tdiff"]
+
+        return df
+
+def flag_dataframe(df, model, source):
+    """
+    df = pandas dataframe to be flagged (or re-flagged)
+    model = the sensor model (in SUPPORTED_MODELS)
+    source = the data source (database or rawsd, eventually cloudAPI as well)
+    """
+    df = df.copy()
+
+    # ensure the model is valid
+    if model not in SUPPORTED_MODELS:
+        raise InvalidDeviceModel("Invalid device model. Must be one of {}".format(SUPPORTED_MODELS))
+    
+    # ensure the data source is valid
+    if source not in SUPPORTED_SOURCES:
+        raise NotImplementedError # add this to exceptions
+
+    # create flag column if it doesn't exist
+    if "flag" not in df.columns:
+        df["flag"] = 0
+
+    # get the bit values for each flag name
+    values = {flag.name: flag.value for flag in FLAGS[model]}
+
+    # set the flag for each flag_name and their respective crtieria 
+    for flag_name, criteria in get_flag_criteria(source, model).items():
+        bit = values[flag_name]                      
+        for criterion in criteria:              
+            df = add_flag(df, flag_name, criterion, bit)
+    return df
+
+def flag_command(file, output, **kwargs):
     verbose = kwargs.pop("verbose", False)
-    flag    = kwargs.pop("flag", "FLAG_ROW")
+    source    = kwargs.pop("source", "rawsd")
     model   = kwargs.pop("model", "modulair_pm")
 
     # make sure the extension is either a csv or feather format
@@ -29,42 +97,16 @@ def flag_command(file, column, comparator, value, output, **kwargs):
     if output.suffix not in (".csv", ".feather"):
         raise InvalidFileExtension("Invalid file extension")
 
-    # ensure the model is valid
-    if model not in SUPPORTED_MODELS:
-        raise InvalidDeviceModel("Invalid device model. Must be one of {}".format(SUPPORTED_MODELS))
-
     save_as_csv = True if output.suffix == ".csv" else False
 
-    # concat everything in filepath
     if verbose:
         click.secho("File to read: {}".format(file), fg='green')
 
     # load the file
     df = safe_load(file)
 
-    # is the <column> in df.columns?
-    if not column in df.columns:
-        raise InvalidArgument("Bad column name")
-
-    # is the comparator valid?
-    if not comparator in ops.keys():
-        raise InvalidArgument("Bad comparator")
-
-    # create flag column if it doesn't exist
-    if "flag" not in df.columns:
-        df["flag"] = 0
-
-    # get the flag value
-    flag_value = 0
-    flag_list = FLAGS.get(model)
-    for label, v, _ in flag_list:
-        if label == flag:
-            flag_value = v
-            break
-
-    # create a mask and set the flag accordingly
-    mask = ops[comparator](df[column], value)
-    df.loc[mask, "flag"] = df[mask]["flag"] | flag_value
+    # flag the dataframe
+    df = flag_dataframe(df, model, source)
 
     # save the file
     if verbose:
@@ -74,3 +116,4 @@ def flag_command(file, column, comparator, value, output, **kwargs):
         df.to_csv(output)
     else:
         df.reset_index().to_feather(output)
+        
