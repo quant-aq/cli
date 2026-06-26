@@ -27,7 +27,7 @@ class SetupTestCase(unittest.TestCase):
                         "-v",
                         os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
                         "10min",
-                    ]
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
@@ -60,7 +60,7 @@ class SetupTestCase(unittest.TestCase):
                         "-v",
                         os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
                         "10min",
-                    ]
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
