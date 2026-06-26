@@ -31,3 +31,11 @@ def safe_load(fpath, **kwargs):
         tmp.drop(columns=unnamed, inplace=True)
 
     return tmp
+
+def determine_timestamp_column(sensor_df: pd.DataFrame) -> str:
+    """Find the best column to use for timestamps."""
+    for col in ("timestamp_iso", "timestamp", "timestamp_local"):
+        if col in sensor_df.columns:
+            return col
+
+    raise ValueError(f"Couldn't find a timestamp column: {sensor_df.columns}")
