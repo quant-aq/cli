@@ -24,10 +24,9 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
-                        "co_we",
-                        "lt",
-                        "205.0"
-                    ]
+                        "v100", # or v200?
+                        "database"
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
@@ -51,10 +50,9 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.feather"),
                         "-v",
                         os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
-                        "co_we",
-                        "gt",
-                        "505.0"
-                    ]
+                        "v100", # or v200?
+                        "database"
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
@@ -78,10 +76,9 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
-                        "co_we",
-                        "lt",
-                        "205.0"
-                    ]
+                        "modulair",
+                        "database"
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
@@ -105,10 +102,9 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
-                        "co_we",
-                        "lt",
-                        "205.0"
-                    ]
+                        "modulair-x",
+                        "rawsd"
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?
@@ -125,17 +121,16 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
     def test_flag_files_modulairx_cloudapi(self):
-        runner = CliRunner()
-        result = runner.invoke(flag, 
+         runner = CliRunner()
+         result = runner.invoke(flag, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
-                        "co_we",
-                        "lt",
-                        "205.0"
-                    ]
+                        "modulair-x",
+                        "cloudapi"
+                    ], catch_exceptions=False
                 )
         
         # did it succeed?

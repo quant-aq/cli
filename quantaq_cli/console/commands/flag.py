@@ -23,7 +23,6 @@ def add_flag(df, flag_name, flag_value, criterion):
             logger.info(
                 f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
             )
-            return df
 
     elif isinstance(criterion, Gap):
         # Find best timestamp column.
