@@ -121,9 +121,9 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
     def test_flag_files_modulairx_cloudapi(self):
-         runner = CliRunner()
-         result = runner.invoke(flag, 
-                    [
+        runner = CliRunner()
+        result = runner.invoke(flag, 
+                   [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
