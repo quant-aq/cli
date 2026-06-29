@@ -32,6 +32,10 @@ _NEPH_COLUMNS = [
     "neph_bin0", "neph_bin1", "neph_bin2", "neph_bin3", "neph_bin4", "neph_bin5",
 ]
 
+
+# Should FLAGS also be a nested dict like FLAG_CRITERIA below
+# (with keys = source, nested keys = model)? 
+# i.e. are flag names and values different for database vs rawSD data?
 FLAGS = {}
 
 FLAGS["v100"] = [
@@ -67,7 +71,7 @@ FLAGS["modulair"] = [
     Flag("FLAG_STARTUP", 1, []),
     Flag("FLAG_OPC", 2, _OPC_COLUMNS),
     Flag("FLAG_NEPH", 4, _NEPH_COLUMNS),
-    Flag("FLAG_RHT", 8, ["sample_rh", "sample_temp"]),
+    Flag("FLAG_RHTP", 8, ["sample_rh", "sample_temp", "sample_pres"]),
     Flag("FLAG_CO", 16, ["co_we", "co_ae", "co_diff"]),
     Flag("FLAG_NO", 32, ["no_we", "no_ae", "no_diff"]),
     Flag("FLAG_NO2", 64, ["no2_we", "no2_ae", "no2_diff"]),
@@ -78,6 +82,9 @@ FLAGS["modulair"] = [
     Flag("FLAG_BAT", 2048, ["bat_voltage", "soc", "vbat"]),
 ]
 
+# modulair-x DB flags are identical to modulair?
+FLAGS["modulair-x"] = FLAGS["modulair"]
+
 SUPPORTED_MODELS = FLAGS.keys()
 
 ###############################################################################
@@ -87,7 +94,7 @@ Gap = namedtuple("Gap", ["gap_in_seconds", "post_gap_flag_length_seconds"])
 
 FLAG_CRITERIA = {
     "database": {
-        "default": { # for DB flags, criteria are consistent across all QuantAQ products
+        "modulair": {
             "FLAG_STARTUP": [Gap(60 * 60, 60 * 60)],
             "FLAG_CO":  [Range("co_ae", 535.0, 800.0)],
             "FLAG_NO":  [Range("no_ae", 640.0, 900.0)],
@@ -95,9 +102,12 @@ FLAG_CRITERIA = {
             "FLAG_O3":  [Range("o3_ae", 1600.0, 1700.0)],
             "FLAG_CO2": [Range("co2_raw", 1000.0, 5000.0)],
             "FLAG_OPC": [Range("bin0", 0.0, 1e6)],
-            "FLAG_RHT": [
+            "FLAG_RHTP": [
                 Range("sample_rh", 0.0, 100.0),
                 Range("sample_temp", -60.0, 85.0),
+                Range("rh", 0.0, 100.0),
+                Range("temp", -60.0, 85.0),
+                #Range("sample_pres", lo, hi), # find these values
             ],
         },
     },
@@ -110,6 +120,9 @@ FLAG_CRITERIA = {
         #},
     },
 }
+
+# modulair-x DB flag criteria are identical to modulair?
+FLAG_CRITERIA["database"]["modulair-x"] = FLAG_CRITERIA["database"]["modulair"]
 
 SUPPORTED_SOURCES = FLAG_CRITERIA.keys()
 

@@ -12,19 +12,20 @@ from ...utilities import determine_timestamp_column, safe_load
 from ...exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 
 
-def add_flag(df, flag_name, criterion, bit):
+def add_flag(df, flag_name, flag_value, criterion):
     if isinstance(criterion, Range):
-        col = df[criterion.column]
-        mask = (col < criterion.lo) | (col > criterion.hi)
-        if not mask.sum():
-            return df
-        df.loc[mask, "flag"] |= bit
-        logger.info(
-                f"Flagged: {flag_name} (flag {bit}) --> {mask.sum()} rows",
+        if criterion.column in df.columns:
+            col = df[criterion.column]
+            mask = (col < criterion.lo) | (col > criterion.hi)
+            if not mask.sum():
+                return df
+            df.loc[mask, "flag"] |= flag_value
+            logger.info(
+                f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
             )
-        return df
+            return df
 
-    if isinstance(criterion, Gap):
+    elif isinstance(criterion, Gap):
         # Find best timestamp column.
         tscol = determine_timestamp_column(df)
 
@@ -47,15 +48,15 @@ def add_flag(df, flag_name, criterion, bit):
             mask = (df[tscol] >= row[tscol]) & (
                 df[tscol] <= (row[tscol] + postgap_delta)
             )
-            df.loc[mask, "flag"] |= bit  
+            df.loc[mask, "flag"] |= flag_value  
             logger.info(
-                f"Flagged: {flag_name} (flag {bit}) --> {mask.sum()} rows",
+                f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
             )
 
         # Delete the tdiff col
         del df["tdiff"]
 
-        return df
+    return df
 
 def flag_dataframe(df, model, source):
     """
@@ -77,20 +78,18 @@ def flag_dataframe(df, model, source):
     if "flag" not in df.columns:
         df["flag"] = 0
 
-    # get the bit values for each flag name
-    values = {flag.name: flag.value for flag in FLAGS[model]}
+    # get the flag values for each flag name
+    flag_values = {flag.name: flag.value for flag in FLAGS[model]}
 
     # set the flag for each flag_name and their respective crtieria 
     for flag_name, criteria in get_flag_criteria(source, model).items():
-        bit = values[flag_name]                      
+        flag_value = flag_values[flag_name]                      
         for criterion in criteria:              
-            df = add_flag(df, flag_name, criterion, bit)
+            df = add_flag(df, flag_name, flag_value, criterion)
     return df
 
-def flag_command(file, output, **kwargs):
+def flag_command(file, output, model, source, **kwargs):
     verbose = kwargs.pop("verbose", False)
-    source    = kwargs.pop("source", "rawsd")
-    model   = kwargs.pop("model", "modulair_pm")
 
     # make sure the extension is either a csv or feather format
     output = Path(output)

@@ -1,6 +1,6 @@
 import pkg_resources
 import rich_click as click
-from quantaq_cli.variables import SUPPORTED_MODELS
+from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -82,25 +82,21 @@ def expunge(file, dry_run, table, output, flag, verbose, model, **kwargs):
 
 @click.command("flag", short_help="flag data based on specific criteria")
 @click.argument("file", nargs=1, type=click.Path())
-@click.argument("column", nargs=1, type=str)
-@click.argument("comparator", nargs=1, type=str)
-@click.argument("value", nargs=1, type=float)
-@click.option("-f", "--flag", default="FLAG_ROW", help="One of [FLAG_OPC, FLAG_CO, FLAG_NO, FLAG_NO2, FLAG_O3, FLAG_CO2, FLAG_ROW]")
+@click.argument("model", type=click.Choice(SUPPORTED_MODELS))
+@click.argument("source", type=click.Choice(SUPPORTED_SOURCES))
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-@click.option("-m", "--model", default="modulair_pm", help="The device model type. One of {}".format(SUPPORTED_MODELS))
-def flag(file, column, comparator, value, flag, output, verbose, model, **kwargs):
-    """Set a FLAG based on user input or statistical method.
+def flag(file, output, verbose, model, source, **kwargs):
+    """Reflag a data file based on data model and data source.
 
-    Four arguments are required:
-      1. FILE -> the path to the file of interest
-      2. COLUMN -> the exact name of the column
-      3. COMPARATOR -> one of ['lt', 'gt', 'eq', 'le', 'ge']
-      4. VALUE -> the value by which to filter
+    Three arguments are required:
+        1. FILE   -> the path to the file of interest
+        2. MODEL  -> the device model type (one of SUPPORTED_MODELS)
+        3. SOURCE -> the data source (one of SUPPORTED_SOURCES)
     """
     from .commands.flag import flag_command
 
-    flag_command(file, column, comparator, value, output, flag=flag, verbose=verbose, model=model)
+    flag_command(file, output, model=model, source=source, verbose=verbose)
 
 
 @click.command("clean")
