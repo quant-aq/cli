@@ -102,6 +102,21 @@ def resample_dataframe(
     if wind is not None:
         u_col, v_col, ws_col, wd_col = wind
         have_uv = {u_col, v_col}.issubset(df.columns)
+        if have_uv and (df[u_col].isna().all() or df[v_col].isna().all()):
+            logger.debug(
+                    "All wind components contain NaNs ({}: {}, {}: {}); "
+                    "Deriving them from the averaged u/v components",
+                    u_col, int(df[u_col].isna().sum()),
+                    v_col, int(df[v_col].isna().sum()),
+                )
+            have_uv = False
+        elif have_uv and (df[u_col].isna().any() or df[v_col].isna().any()):
+            logger.debug(
+                    "Some wind components contain NaNs ({}: {}, {}: {}); "
+                    "affected bins might produce NaN wind",
+                    u_col, int(df[u_col].isna().sum()),
+                    v_col, int(df[v_col].isna().sum()),
+                )
         have_polar = {ws_col, wd_col}.issubset(df.columns)
         if not have_uv and have_polar:
             # Create the u/v components from speed/direction before resampling.
