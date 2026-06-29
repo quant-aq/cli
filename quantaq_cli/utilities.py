@@ -1,7 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
-from .exceptions import InvalidFileExtension
+from quantaq_cli.exceptions import InvalidFileExtension
+
 
 def safe_load(fpath, **kwargs):
     """Load and return a file
