@@ -7,6 +7,7 @@ import shutil, tempfile
 import pandas as pd
 
 from quantaq_cli.console import merge, concat
+from quantaq_cli.utilities import safe_load
 
 
 class SetupTestCase(unittest.TestCase):
@@ -44,9 +45,9 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
         # are the number of lines correct?
-        df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), index_col=0)
-        df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"), index_col=0)
-        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+        df1 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"))
+        df2 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"))
+        df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
 
         self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
       
@@ -59,7 +60,8 @@ class SetupTestCase(unittest.TestCase):
                         "-v",
                         os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
                         os.path.join(self.test_files_dir, "arisense/ref/ref.csv"),
-                    ]
+                    ],
+                    catch_exceptions=False
                 )
         
         # did it succeed?
@@ -83,7 +85,8 @@ class SetupTestCase(unittest.TestCase):
                 os.path.join(self.test_dir, "concat1.csv"),
                 os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"),
                 os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file2.csv"),
-            ]
+            ],
+                    catch_exceptions=False
         )
 
         self.assertEqual(res1.exit_code, 0)
@@ -95,7 +98,8 @@ class SetupTestCase(unittest.TestCase):
                 "-l",
                 os.path.join(self.test_files_dir, "modulair-pm/logs/000001.txt"),
                 os.path.join(self.test_files_dir, "modulair-pm/logs/000002.txt"),
-            ]
+            ],
+                    catch_exceptions=False
         )
 
         self.assertEqual(res2.exit_code, 0)
@@ -139,9 +143,9 @@ class SetupTestCase(unittest.TestCase):
             self.assertEqual(p.suffix, ".csv")
 
             # are the number of lines correct?
-            df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), skiprows=3)
-            df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"), skiprows=3)
-            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+            df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"))
+            df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"))
+            df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
 
             print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
             self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
@@ -173,9 +177,9 @@ class SetupTestCase(unittest.TestCase):
             self.assertEqual(p.suffix, ".csv")
 
             # are the number of lines correct?
-            df1 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
-            df2 = pd.read_csv(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
-            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+            df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
+            df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
+            df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
 
             print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
             self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
