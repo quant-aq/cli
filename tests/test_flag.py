@@ -16,58 +16,6 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def test_flag_files_arisense_db(self):
-        runner = CliRunner()
-        result = runner.invoke(flag, 
-                    [
-                        "-o",
-                        os.path.join(self.test_dir, "output.csv"),
-                        "-v",
-                        os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
-                        "v100", # or v200?
-                        "database"
-                    ], catch_exceptions=False
-                )
-        
-        # did it succeed?
-        self.assertEqual(result.exit_code, 0)
-
-        # did it output the correct text?
-        self.assertTrue("File to read" in result.output)
-
-        # make sure the file exists
-        p = Path(self.test_dir + "/output.csv")
-        self.assertTrue(p.exists())
-        
-        # is it a csv?
-        self.assertEqual(p.suffix, ".csv")
-
-    def test_flag_files_feather(self):
-        runner = CliRunner()
-        result = runner.invoke(flag, 
-                    [
-                        "-o",
-                        os.path.join(self.test_dir, "output.feather"),
-                        "-v",
-                        os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
-                        "v100", # or v200?
-                        "database"
-                    ], catch_exceptions=False
-                )
-        
-        # did it succeed?
-        self.assertEqual(result.exit_code, 0)
-
-        # did it output the correct text?
-        self.assertTrue("File to read" in result.output)
-
-        # make sure the file exists
-        p = Path(self.test_dir + "/output.feather")
-        self.assertTrue(p.exists())
-        
-        # is it a csv?
-        self.assertEqual(p.suffix, ".feather")
-
     def test_flag_files_modulair_db(self):
         runner = CliRunner()
         result = runner.invoke(flag, 

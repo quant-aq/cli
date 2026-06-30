@@ -38,27 +38,6 @@ _NEPH_COLUMNS = [
 # i.e. are flag names and values different for database vs rawSD data?
 FLAGS = {}
 
-FLAGS["v100"] = [
-    Flag("FLAG_STARTUP", 1, []),
-    Flag("FLAG_OPC", 2, _OPC_COLUMNS_V1),
-    Flag("FLAG_TOTAL_COUNTS", 4, [
-        "voc_raw", "pressure", "temp_manifold", "rh_manifold", "temp_box",
-        "dew_point", "noise", "solar", "wind_dir", "wind_speed",
-        "sample_time", "opc_flow", "manifold_temp", "manifold_rh",
-    ]),
-    Flag("FLAG_CO", 8, ["co_we", "co_ae"]),
-    Flag("FLAG_NO", 16, ["no_we", "no_ae"]),
-    Flag("FLAG_NO2", 32, ["no2_we", "no2_ae"]),
-    Flag("FLAG_O3", 64, ["o3_we", "o3_ae"]),
-    Flag("FLAG_OPC_RECORD_NUM", 128, _OPC_COLUMNS_V1),
-    Flag("FLAG_CO2", 256, ["co2_raw"]),
-    # Flag("FLAG_PP", 512, [...]),
-    Flag("FLAG_ROW", 1024, None),
-]
-
-# v200 flags are identical to the v100 flags.
-FLAGS["v200"] = FLAGS["v100"]
-
 FLAGS["modulair_pm"] = [
     Flag("FLAG_STARTUP", 1, []),
     Flag("FLAG_OPC", 2, _OPC_COLUMNS),
