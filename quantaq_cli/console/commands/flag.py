@@ -6,7 +6,8 @@ import numpy as np
 from loguru import logger
 from terminaltables import SingleTable
 
-from quantaq_cli.variables import FLAGS, get_flag_criteria, SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_CRITERIA, get_flag_criteria
+from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 from quantaq_cli.variables import Range, Gap
 from quantaq_cli.utilities import determine_timestamp_column, safe_load
 from quantaq_cli.utilities import infer_data_source, infer_data_model
@@ -82,11 +83,11 @@ def flag_dataframe(df):
         df["flag"] = 0
 
     # get the flag values for each flag name
-    flag_values = {flag.name: flag.value for flag in FLAGS[model]}
+    FLAG_VALUES = {flag.name: flag.value for flag in FLAG_DEFINITIONS}
 
     # set the flag for each flag_name and their respective crtieria 
     for flag_name, criteria in get_flag_criteria(source, model).items():
-        flag_value = flag_values[flag_name]                      
+        flag_value = FLAG_VALUES[flag_name]                      
         for criterion in criteria:              
             df = add_flag(df, flag_name, flag_value, criterion)
     return df
