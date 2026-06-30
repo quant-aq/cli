@@ -6,6 +6,35 @@ import pandas as pd
 from quantaq_cli.exceptions import InvalidFileExtension
 
 
+def infer_data_source(df):
+    # Determine the best timestamp column and sort
+    tscol = determine_timestamp_column(df)
+    df[tscol] = pd.to_datetime(df[tscol])
+    df = df.sort_values(tscol)
+
+    # Grab the tdiff between consecutive rows
+    df["tdiff"] = df[tscol].diff().dt.total_seconds()
+    tdiffs = set(df["tdiff"].dropna().unique())
+
+    has_1min = 60.0 in tdiffs
+    has_5sec = 5.0 in tdiffs
+
+    if has_1min and has_5sec:
+        logger.debug("Mixed 1-min and 5-sec sampling not supported")
+        raise NotImplementedError
+    elif has_1min:
+        logger.info("Reading 1-min data --> inferring database or cloud API")
+        if "api_received_at" in df.columns:
+            return "cloudapi"
+        else:
+            return "database"
+    elif has_5sec:
+        logger.info("Reading 5-sec data --> inferring rawSD")
+        return "rawsd"
+    else:
+        logger.debug(f"Unrecognized sampling intervals: {sorted(tdiffs)}")
+        raise NotImplementedError
+
 def infer_data_model(df):
     sn_array = df['sn'].unique()
     if len(sn_array) > 1:
