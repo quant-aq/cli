@@ -5,7 +5,7 @@ import click
 from loguru import logger
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
+from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
 
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.utilities import safe_load
@@ -89,8 +89,8 @@ def resample_dataframe(
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
     """
-    if type(df[on]) != np.datetime64:
-        df[on] = df[on].map(pd.to_datetime)
+    if not is_datetime64_any_dtype(df[on]):
+        df[on] = pd.to_datetime(df[on])
 
     keys = [by] if isinstance(by, str) else list(by or [])
 

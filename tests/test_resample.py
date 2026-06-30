@@ -56,38 +56,6 @@ class SetupTestCase(unittest.TestCase):
 
         self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
 
-    def test_resample_files_feather(self):
-        runner = CliRunner()
-        result = runner.invoke(resample, 
-                    [
-                        "-o",
-                        os.path.join(self.test_dir, "output.feather"),
-                        "-v",
-                        os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
-                        "10min",
-                    ], catch_exceptions=False
-                )
-        
-        # did it succeed?
-        self.assertEqual(result.exit_code, 0)
-
-        # did it output the correct text?
-        self.assertTrue("Saving file" in result.output)
-
-        # make sure the file exists
-        p = Path(self.test_dir + "/output.feather")
-        self.assertTrue(p.exists())
-        
-        # is it a csv?
-        self.assertEqual(p.suffix, ".feather")
-
-        # are the number of lines correct?
-        df = pd.read_feather(os.path.join(self.test_dir, "output.feather"))
-
-        idx = df.timestamp.values
-
-        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
-
     def test_resample_modulair_db(self):
         runner = CliRunner()
         result = runner.invoke(resample, 

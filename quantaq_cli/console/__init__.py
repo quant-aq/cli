@@ -52,7 +52,13 @@ def merge(files, tscol, output, verbose, **kwargs):
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("--on", default="timestamp", help="Name of the datetime column to resample over.", type=str)
 @click.option("--by", default=None, help="Optional column(s) to group by first")
-@click.option("--wind", default=("wx_u", "wx_v", "wx_ws", "wx_wd"), help="``(u, v, speed, direction)`` column names")
+@click.option(
+    "--wind",
+    nargs=4,
+    type=str,
+    default=("wx_u", "wx_v", "wx_ws", "wx_wd"),
+    help="(u, v, speed, direction) column names",
+)
 @click.option("--numeric_how", default="mean", help="Aggregation for numeric columns.")
 @click.option("--nonnumeric_how", default="first", help="Aggregation for non-numeric columns.")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
