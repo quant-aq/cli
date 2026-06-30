@@ -1,11 +1,16 @@
-import pandas as pd
 from pathlib import Path
+
+from loguru import logger
+import pandas as pd
 
 from quantaq_cli.exceptions import InvalidFileExtension
 
 
 def safe_load(fpath, **kwargs):
     """Load and return a file
+
+    TO DO: replace feather functionality with parquet (will do as part of sc-20240)
+    also note that pd.read_feather doesn't take a skiprows option
     """
     p = Path(fpath)
 
@@ -19,7 +24,17 @@ def safe_load(fpath, **kwargs):
     tmp = pd.read_csv(fpath, nrows=1, header=None) if as_csv else pd.read_feather(fpath)
 
     if tmp.iloc[0, 0] == "deviceModel": # hack to deal with modulair format
+        logger.info("Reading rawSD card data {}", fpath)
+        
+        # Grab the serial number from the header
+        tmp2 = pd.read_csv(fpath, nrows=3, header=None)
+        serial_number = tmp2.iloc[2, 1]
+
+        # Add the sn as a column
         tmp = pd.read_csv(fpath, skiprows=3) if as_csv else pd.read_feather(fpath, skiprows=3)
+        tmp['sn'] = serial_number
+        logger.info("Added serial number {} to column `sn` ", serial_number)
+        
     elif tmp.shape[1] == 2: # hack to deal with bad header format
         tmp = pd.read_csv(fpath, skiprows=1) if as_csv else pd.read_feather(fpath, skiprows=1)
     else:
