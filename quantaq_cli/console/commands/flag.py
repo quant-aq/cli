@@ -9,6 +9,7 @@ from terminaltables import SingleTable
 from quantaq_cli.variables import FLAGS, get_flag_criteria, SUPPORTED_MODELS, SUPPORTED_SOURCES
 from quantaq_cli.variables import Range, Gap
 from quantaq_cli.utilities import determine_timestamp_column, safe_load
+from quantaq_cli.utilities import infer_data_source, infer_data_model
 from quantaq_cli.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 
 
@@ -57,13 +58,16 @@ def add_flag(df, flag_name, flag_value, criterion):
 
     return df
 
-def flag_dataframe(df, model, source):
+def flag_dataframe(df):
     """
     df = pandas dataframe to be flagged (or re-flagged)
     model = the sensor model (in SUPPORTED_MODELS)
     source = the data source (database or rawsd, eventually cloudAPI as well)
     """
     df = df.copy()
+
+    model = infer_data_model(df)
+    source = infer_data_source(df)
 
     # ensure the model is valid
     if model not in SUPPORTED_MODELS:
@@ -87,7 +91,7 @@ def flag_dataframe(df, model, source):
             df = add_flag(df, flag_name, flag_value, criterion)
     return df
 
-def flag_command(file, output, model, source, **kwargs):
+def flag_command(file, output, **kwargs):
     verbose = kwargs.pop("verbose", False)
 
     # make sure the extension is either a csv or feather format
@@ -104,7 +108,7 @@ def flag_command(file, output, model, source, **kwargs):
     df = safe_load(file)
 
     # flag the dataframe
-    df = flag_dataframe(df, model, source)
+    df = flag_dataframe(df)
 
     # save the file
     if verbose:
