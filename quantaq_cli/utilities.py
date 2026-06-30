@@ -6,6 +6,27 @@ import pandas as pd
 from quantaq_cli.exceptions import InvalidFileExtension
 
 
+def infer_data_model(df):
+    sn_array = df['sn'].unique()
+    if len(sn_array) > 1:
+        logger.debug(f"Found {len(sn_array)} unique serial numbers: {sn_array}")
+        raise ValueError(
+            f"More than one unique serial number found in dataframe: {sn_array}"
+        )
+    device_sn = sn_array.item()
+    device_model = sn_to_model(device_sn)
+    return device_model
+
+def sn_to_model(device_sn):
+    """Map a device serial number to its model string.
+    MOD-00246      -> modulair
+    MOD-PM-00933   -> modulair-pm
+    MOD-X-00993    -> modulair-x
+    MOD-X-PM-01685 -> modulair-x-pm
+    """
+    prefix, _, _ = device_sn.rpartition("-")
+    return prefix.lower().replace("mod", "modulair", 1)
+
 def safe_load(fpath, **kwargs):
     """Load and return a file
 
