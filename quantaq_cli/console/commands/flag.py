@@ -4,6 +4,8 @@ import click
 import pandas as pd
 import numpy as np
 from loguru import logger
+import rich
+from rich.table import Table
 from terminaltables import SingleTable
 
 from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_CRITERIA, get_flag_criteria
@@ -58,6 +60,59 @@ def add_flag(df, flag_name, flag_value, criterion):
         del df["tdiff"]
 
     return df
+
+def flag_summary(df):
+    """Create a table with a summary of flags.
+
+    Parameters
+    ----------
+    sensor_df
+        DataFrame with flags to summarize.
+
+    Returns
+    -------
+        A new DataFrame, suitable for human consumption.
+
+    TO DO: move this to flag.py after merging sc-20242
+    """
+    # force the flag column to be an int
+    df["flag"] = df["flag"].astype(int, errors='ignore')
+
+    rows = []
+    for name, value, cols in FLAG_DEFINITIONS:
+        mask = df["flag"] & value
+        num_naffected = mask.astype(bool).sum()
+        percent_affected = f"{100 * num_naffected / df.shape[0]:.1f}"
+        rows.append([name, int(value), num_naffected, percent_affected])
+
+    explained_df = pd.DataFrame(
+        rows,
+        columns=["FLAG", "FLAG VALUE", "# OCCURENCES", "% DATA"],
+    ).set_index("FLAG")
+    return explained_df
+
+def echo_flag_table(df):
+    """Print a table of flag statistics for a DataFrame.
+
+    Parameters
+    ----------
+    sensor_df
+        DataFrame to describe.
+
+    TO DO: move this to flag.py after merging sc-20242
+    """
+    explained_df = flag_summary(df)
+
+    table = Table()
+    for column in ["FLAG", *explained_df.columns]:
+        table.add_column(
+            column,
+            justify="right" if column != "FLAG" else "left",
+            style="bold",
+        )
+    for row in explained_df.itertuples():
+        table.add_row(*map(str, row))
+    rich.print(table)
 
 def flag_dataframe(df):
     """

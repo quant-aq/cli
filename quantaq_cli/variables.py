@@ -61,7 +61,7 @@ _O3_COLUMNS = [
 
 # Flag Name, Flag Bitmask Value, Columns to Nan
 FLAG_DEFINITIONS = [
-    Flag("FLAG_STARTUP", 1, []),
+    Flag("FLAG_STARTUP", 1, "all_columns"),
     Flag("FLAG_OPC", 2, _OPC_COLUMNS),
     Flag("FLAG_NEPH", 4, _NEPH_COLUMNS),
     Flag("FLAG_RHTP", 8, _RHTP_COLUMNS),
