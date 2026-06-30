@@ -1,7 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
-from .exceptions import InvalidFileExtension
+from quantaq_cli.exceptions import InvalidFileExtension
+
 
 def safe_load(fpath, **kwargs):
     """Load and return a file
@@ -25,7 +26,8 @@ def safe_load(fpath, **kwargs):
         tmp = pd.read_csv(fpath) if as_csv else pd.read_feather(fpath)
 
     # drop the extra column if it was added
-    if "Unnamed: 0" in tmp.columns:
-        del tmp["Unnamed: 0"]
+    unnamed = [c for c in tmp.columns if str(c).startswith("Unnamed:")]
+    if unnamed:
+        tmp.drop(columns=unnamed, inplace=True)
 
     return tmp

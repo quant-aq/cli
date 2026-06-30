@@ -1,6 +1,6 @@
-import rich_click as click
 import pkg_resources
-from ..variables import SUPPORTED_MODELS
+import rich_click as click
+from quantaq_cli.variables import SUPPORTED_MODELS
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -48,17 +48,20 @@ def merge(files, tscol, output, verbose, **kwargs):
 
 @click.command("resample", short_help="up/down sample data")
 @click.argument("file", nargs=1, type=click.Path())
-@click.argument("interval", nargs=1, type=str)
-@click.option("-ts", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
-@click.option("-m", "--method", default="mean", help="One of [mean, median, sum, min, max]")
+@click.argument("rule", nargs=1, type=str)
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
+@click.option("--on", default="timestamp", help="Name of the datetime column to resample over.", type=str)
+@click.option("--by", default=None, help="Optional column(s) to group by first")
+@click.option("--wind", default=("wx_u", "wx_v", "wx_ws", "wx_wd"), help="``(u, v, speed, direction)`` column names")
+@click.option("--numeric_how", default="mean", help="Aggregation for numeric columns.")
+@click.option("--nonnumeric_how", default="first", help="Aggregation for non-numeric columns.")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def resample(file, interval, tscol, method, output, verbose, **kwargs):
+def resample(file, rule, output, verbose, **kwargs):
     """Resample FILE at INTERVAL and save to OUTPUT.
     """
     from .commands.resample import resample_command
 
-    resample_command(file, interval, output, method=method, tscol=tscol, verbose=verbose, **kwargs)
+    resample_command(file, rule, output, verbose=verbose, **kwargs)
 
 
 @click.command("expunge", short_help="NaN flagged values")
