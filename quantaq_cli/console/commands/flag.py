@@ -6,10 +6,10 @@ import numpy as np
 from loguru import logger
 from terminaltables import SingleTable
 
-from ...variables import FLAGS, get_flag_criteria, SUPPORTED_MODELS, SUPPORTED_SOURCES
-from ...variables import Range, Gap
-from ...utilities import determine_timestamp_column, safe_load
-from ...exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
+from quantaq_cli.variables import FLAGS, get_flag_criteria, SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_cli.variables import Range, Gap
+from quantaq_cli.utilities import determine_timestamp_column, safe_load
+from quantaq_cli.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 
 
 def add_flag(df, flag_name, flag_value, criterion):
