@@ -8,7 +8,7 @@ from quantaq_py import concat_files, merge_files, resample_dataframe, clean_file
 from quantaq_py import flag_dataframe, echo_flag_table, expunge_dataframe
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
-from quantaq_py.resample import WIND_COLUMNS
+from quantaq_py.toolkit.resample import WIND_COLUMNS
 from quantaq_py.utilities import safe_load
 from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 
