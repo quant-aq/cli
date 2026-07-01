@@ -97,3 +97,31 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".csv")
+
+    def test_flag_files_modulair_db_parquet(self):
+        runner = CliRunner()
+        result = runner.invoke(flag_command, 
+                   [
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-raw.parquet"), 
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("File to read" in result.output)
+
+        # check that flag summary table printed twice — once before flagging, once after
+        self.assertEqual(result.output.count("# OCCURENCES"), 2)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a parquet?
+        self.assertEqual(p.suffix, ".parquet")

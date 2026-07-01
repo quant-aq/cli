@@ -74,6 +74,11 @@ def flag_summary(df):
 
     TO DO: move this to flag.py after merging sc-20242
     """
+
+    # create flag column if it doesn't exist
+    if "flag" not in df.columns:
+        df["flag"] = 0
+
     # force the flag column to be an int
     df["flag"] = df["flag"].astype(int, errors='ignore')
 

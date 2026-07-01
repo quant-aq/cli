@@ -42,4 +42,5 @@ def merge_files(files, tscol="timestamp"):
 
         # merge with the other files
         df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer')
+    df = df.reset_index()  # bring timestamp back as a column named `tscol`
     return df

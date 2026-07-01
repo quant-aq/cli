@@ -79,11 +79,9 @@ def merge_command(files, output, tscol, log_level):
     # save the file
     logger.info("Saving file to {}", output)
     if output.suffix == ".csv":
-        # index=True is needed to preserve the timestamp column after merge
-        df.to_csv(output, index=True)
+        df.to_csv(output, index=False)
     else:
-         # index=True is needed to preserve the timestamp column after merge
-        df.to_parquet(output, index=True)
+        df.to_parquet(output, index=False)
 
 
 @click.command("resample", short_help="up/down sample data")
@@ -113,9 +111,9 @@ def resample_command(file, rule, output, log_level, **kwargs):
     numeric_how = kwargs.pop("numeric_how", "mean")
     nonnumeric_how = kwargs.pop("nonnumeric_how", "first")
 
-    # make sure the extension is either a csv or feather format
+    # make sure the extension is either a csv or parquet format
     output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
+    if output.suffix not in (".csv", ".parquet"):
         raise InvalidFileExtension("Invalid file extension")
 
     logger.info("File to read: {}", file)
@@ -155,9 +153,9 @@ def resample_command(file, rule, output, log_level, **kwargs):
 def flag_command(file, output, log_level):
     configure_logging(log_level)
 
-    # make sure the extension is either a csv or feather format
+    # make sure the extension is either a csv or parquet format
     output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
+    if output.suffix not in (".csv", ".parquet"):
         raise InvalidFileExtension("Invalid file extension")
 
     logger.info("File to read: {}", file)
@@ -194,7 +192,7 @@ def expunge_command(file, output, log_level, dry_run):
     configure_logging(log_level)
 
     output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
+    if output.suffix not in (".csv", ".parquet"):
         raise InvalidFileExtension("Invalid file extension")
 
     logger.info("Expunging data for {}", file)
@@ -232,7 +230,7 @@ def clean_command(filepath, output, log_level):
     configure_logging(log_level)
 
     output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
+    if output.suffix not in (".csv", ".parquet"):
         raise InvalidFileExtension("Invalid file extension")
     
     logger.info("Cleaning data for {}", filepath)

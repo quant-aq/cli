@@ -195,6 +195,40 @@ class SetupTestCase(unittest.TestCase):
 
         self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
 
+    def test_resample_modulair_db_parquet(self):
+        runner = CliRunner()
+        result = runner.invoke(resample_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"), 
+                        "1D",
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a parquet?
+        self.assertEqual(p.suffix, ".parquet")
+
+        # are the number of lines correct?
+        df = pd.read_parquet(os.path.join(self.test_dir, "output.parquet"))
+        df['timestamp'] = df['timestamp'].map(pd.to_datetime)
+       
+        idx = df.timestamp.values
+
+        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 86400.0)
+
     def test_resample_dataframe_nan_winds(self):
         """Test for edge case in case u/v cols exist but have nans.
         """

@@ -5,9 +5,9 @@ import unittest
 from os import path
 from pathlib import Path
 
+from click.testing import CliRunner
 import numpy as np
 import pandas as pd
-from click.testing import CliRunner
 from pandas.testing import assert_frame_equal
 
 from quantaq_py import expunge_dataframe, flag_summary
@@ -315,3 +315,28 @@ def test_flag_summary_basic():
     expected.index.name = "FLAG"
 
     assert_frame_equal(summary.sort_index(), expected.sort_index())
+
+    def test_expunge_modulair_db_parquet(self):
+        runner = CliRunner()
+        result = runner.invoke(expunge_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-raw.parquet"), 
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".parquet")

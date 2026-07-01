@@ -79,4 +79,24 @@ class SetupTestCase(unittest.TestCase):
         
         # is it a csv?
         self.assertEqual(p.suffix, ".csv")
+
+    def test_clean_file_modulair_db_parquet(self):
+        runner = CliRunner()
+        result = runner.invoke(clean_command, 
+                    [
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-raw.parquet"), 
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                    ],
+                    catch_exceptions=False
+                )
         
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a parquet?
+        self.assertEqual(p.suffix, ".parquet")

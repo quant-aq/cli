@@ -44,11 +44,14 @@ class SetupTestCase(unittest.TestCase):
             self.test_files_dir, "modulair/MOD-00014-db-raw.csv"))
         df3 = safe_load(os.path.join(
             self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
+        df4 = safe_load(os.path.join(
+            self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
 
         cases = [
             (df1, "rawsd"),
             (df2, "database"),
             (df3, "cloudapi"),
+            (df4, "database"),
         ]
 
         for df, expected in cases:

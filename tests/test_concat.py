@@ -144,3 +144,33 @@ class SetupTestCase(unittest.TestCase):
         df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
 
         self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
+
+    def test_concat_files_modulair_db_parquet(self):
+        runner = CliRunner()
+        result = runner.invoke(concat_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"),
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file2.parquet"),
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a parquet?
+        self.assertEqual(p.suffix, ".parquet")
+
+        # are the number of lines correct?
+        df1 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
+        df2 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file2.parquet"))
+        df3 = safe_load(os.path.join(self.test_dir, "output.parquet")) 
+
+        self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
