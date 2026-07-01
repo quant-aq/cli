@@ -10,8 +10,8 @@ import pandas as pd
 from click.testing import CliRunner
 from loguru import logger
 
-from quantaq_py.console import resample
-from quantaq_py.console.commands.resample import resample_dataframe, WIND_COLUMNS
+from quantaq_py.resample import resample_dataframe
+from quantaq_py.cli import resample_command
 from quantaq_py.utilities import safe_load
 
 
@@ -25,11 +25,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_resample_files_csv(self):
         runner = CliRunner()
-        result = runner.invoke(resample, 
+        result = runner.invoke(resample_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "arisense/ref/ref.csv"), 
                         "10min",
                     ], catch_exceptions=False
@@ -58,11 +59,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_resample_modulair_db(self):
         runner = CliRunner()
-        result = runner.invoke(resample, 
+        result = runner.invoke(resample_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
                         "1h",
                     ], catch_exceptions=False
@@ -91,11 +93,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_resample_modulairpm_rawsd(self):
         runner = CliRunner()
-        result = runner.invoke(resample, 
+        result = runner.invoke(resample_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), 
                         "10min",
                         "--on",
@@ -126,11 +129,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_resample_modulairx_rawsd(self):
         runner = CliRunner()
-        result = runner.invoke(resample, 
+        result = runner.invoke(resample_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
                         "10min",
                     ], catch_exceptions=False
@@ -159,11 +163,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_resample_modulairx_cloudapi(self):
         runner = CliRunner()
-        result = runner.invoke(resample, 
+        result = runner.invoke(resample_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
                         "10min",
                     ], catch_exceptions=False

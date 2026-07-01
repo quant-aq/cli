@@ -3,9 +3,11 @@ import click
 
 from loguru import logger
 
-from quantaq_py import concat_files, merge_files
+from quantaq_py import concat_files, merge_files, resample_dataframe
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
+from quantaq_py.resample import WIND_COLUMNS
+from quantaq_py.utilities import safe_load
 
 
 @click.command("concat")
@@ -66,4 +68,63 @@ def merge_command(files, output, tscol, log_level):
     else:
          # index=True is needed to preserve the timestamp column after merge
         df.to_parquet(output, index=True)
-        
+
+
+@click.command("resample", short_help="up/down sample data")
+@click.argument("file", nargs=1, type=click.Path())
+@click.argument("rule", nargs=1, type=str)
+@click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
+@click.option("--on", default="timestamp", help="Name of the datetime column to resample over.", type=str)
+@click.option("--by", default=None, help="Optional column(s) to group by first")
+@click.option(
+    "--wind",
+    nargs=4,
+    type=str,
+    default=("wx_u", "wx_v", "wx_ws", "wx_wd"),
+    help="(u, v, speed, direction) column names",
+)
+@click.option("--numeric_how", default="mean", help="Aggregation for numeric columns.")
+@click.option("--nonnumeric_how", default="first", help="Aggregation for non-numeric columns.")
+@click.option("--log-level", default="INFO",
+              type=click.Choice(LOG_LEVELS, case_sensitive=False),
+              help="loguru log level (default: INFO)")
+def resample_command(file, rule, output, log_level, **kwargs):
+    """Resample FILE at INTERVAL and save to OUTPUT."""
+    configure_logging(log_level)
+    on = kwargs.pop("on", "timestamp")
+    by = kwargs.pop("by", None)
+    wind = kwargs.pop("wind", WIND_COLUMNS)
+    numeric_how = kwargs.pop("numeric_how", "mean")
+    nonnumeric_how = kwargs.pop("nonnumeric_how", "first")
+
+    # make sure the extension is either a csv or feather format
+    output = Path(output)
+    if output.suffix not in (".csv", ".feather"):
+        raise InvalidFileExtension("Invalid file extension")
+
+    logger.info("File to read: {}", file)
+
+    # load the file
+    df = safe_load(file)
+
+    # if column to resample over needs to be made a datetime obj, do so
+    if on not in df.columns:
+        raise Exception("Invalid column name for the timestamp")
+
+    # resample
+    df = resample_dataframe(
+        df,
+        rule,
+        on=on,
+        by=by,
+        wind=wind,
+        numeric_how=numeric_how,
+        nonnumeric_how=nonnumeric_how,
+    )
+
+    # save the file
+    logger.info("Saving file to {}", output)
+    if output.suffix == ".csv":
+        df.to_csv(output, index=False)
+    else:
+        df.to_parquet(output, index=False)
