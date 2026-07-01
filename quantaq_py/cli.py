@@ -4,6 +4,7 @@ import click
 from loguru import logger
 
 from quantaq_py import concat_files, merge_files, resample_dataframe
+from quantaq_py import flag_dataframe, echo_flag_table
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
 from quantaq_py.resample import WIND_COLUMNS
@@ -128,3 +129,40 @@ def resample_command(file, rule, output, log_level, **kwargs):
         df.to_csv(output, index=False)
     else:
         df.to_parquet(output, index=False)
+
+
+@click.command("flag")
+@click.argument("file", nargs=1, type=click.Path())
+@click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
+@click.option("--log-level", default="INFO",
+              type=click.Choice(LOG_LEVELS, case_sensitive=False),
+              help="loguru log level (default: INFO)")
+def flag_command(file, output, log_level):
+    configure_logging(log_level)
+
+    # make sure the extension is either a csv or feather format
+    output = Path(output)
+    if output.suffix not in (".csv", ".feather"):
+        raise InvalidFileExtension("Invalid file extension")
+
+    logger.info("File to read: {}", file)
+
+    # load the file
+    df = safe_load(file)
+
+    # flag the dataframe
+    logger.info("Original flag summary:")
+    echo_flag_table(df)
+
+    df = flag_dataframe(df)
+
+    logger.info("New flag summary:")
+    echo_flag_table(df)
+
+    # save the file
+    logger.info("Saving file to {}", output)
+    if output.suffix == ".csv":
+        df.to_csv(output, index=False)
+    else:
+        df.to_parquet(output, index=False)
+        

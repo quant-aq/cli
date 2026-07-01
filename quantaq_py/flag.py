@@ -8,12 +8,11 @@ import rich
 from rich.table import Table
 from terminaltables import SingleTable
 
-from quantaq_py.variables import FLAG_DEFINITIONS, FLAG_CRITERIA, get_flag_criteria
-from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
-from quantaq_py.variables import Range, Gap
+from quantaq_py.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
+from quantaq_py.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_py.variables import Range, Gap, get_flag_criteria
 from quantaq_py.utilities import determine_timestamp_column, safe_load
 from quantaq_py.utilities import infer_data_source, infer_data_model
-from quantaq_py.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 
 
 def add_flag(df, flag_name, flag_value, criterion):
@@ -146,32 +145,3 @@ def flag_dataframe(df):
         for criterion in criteria:              
             df = add_flag(df, flag_name, flag_value, criterion)
     return df
-
-def flag_command(file, output, **kwargs):
-    verbose = kwargs.pop("verbose", False)
-
-    # make sure the extension is either a csv or feather format
-    output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
-        raise InvalidFileExtension("Invalid file extension")
-
-    save_as_csv = True if output.suffix == ".csv" else False
-
-    if verbose:
-        click.secho("File to read: {}".format(file), fg='green')
-
-    # load the file
-    df = safe_load(file)
-
-    # flag the dataframe
-    df = flag_dataframe(df)
-
-    # save the file
-    if verbose:
-        click.secho("Saving file to {}".format(output), fg='green')
-
-    if save_as_csv:
-        df.to_csv(output)
-    else:
-        df.reset_index().to_feather(output)
-        

@@ -1,4 +1,5 @@
 import unittest
+from unittest import result
 from click.testing import CliRunner
 from os import path
 from pathlib import Path
@@ -6,7 +7,7 @@ import os
 import shutil, tempfile
 import pandas as pd
 
-from quantaq_py.console import flag
+from quantaq_py.cli import flag_command
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):
@@ -18,11 +19,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_flag_files_modulair_db(self):
         runner = CliRunner()
-        result = runner.invoke(flag, 
+        result = runner.invoke(flag_command, 
                     [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
                     ], catch_exceptions=False
                 )
@@ -33,6 +35,9 @@ class SetupTestCase(unittest.TestCase):
         # did it output the correct text?
         self.assertTrue("File to read" in result.output)
 
+        # check that flag summary table printed twice — once before flagging, once after
+        self.assertEqual(result.output.count("# OCCURENCES"), 2)
+
         # make sure the file exists
         p = Path(self.test_dir + "/output.csv")
         self.assertTrue(p.exists())
@@ -41,6 +46,7 @@ class SetupTestCase(unittest.TestCase):
         self.assertEqual(p.suffix, ".csv")
 
     #def test_flag_files_modulairx_rawsd(self):
+    #    NOTE: not currently implemented
     #    runner = CliRunner()
     #    result = runner.invoke(flag, 
     #                [
@@ -68,11 +74,12 @@ class SetupTestCase(unittest.TestCase):
 
     def test_flag_files_modulairx_cloudapi(self):
         runner = CliRunner()
-        result = runner.invoke(flag, 
+        result = runner.invoke(flag_command, 
                    [
                         "-o",
                         os.path.join(self.test_dir, "output.csv"),
-                        "-v",
+                        "--log-level",
+                        "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
                     ], catch_exceptions=False
                 )
@@ -82,6 +89,9 @@ class SetupTestCase(unittest.TestCase):
 
         # did it output the correct text?
         self.assertTrue("File to read" in result.output)
+
+        # check that flag summary table printed twice — once before flagging, once after
+        self.assertEqual(result.output.count("# OCCURENCES"), 2)
 
         # make sure the file exists
         p = Path(self.test_dir + "/output.csv")
