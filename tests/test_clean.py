@@ -6,7 +6,7 @@ import os
 import shutil, tempfile
 import pandas as pd
 
-from quantaq_py.console import clean
+from quantaq_py.cli import clean_command
 
 
 class SetupTestCase(unittest.TestCase):
@@ -19,9 +19,10 @@ class SetupTestCase(unittest.TestCase):
 
     def test_clean_file_arisense_db(self):
         runner = CliRunner()
-        result = runner.invoke(clean, 
+        result = runner.invoke(clean_command, 
                     [
                         os.path.join(self.test_files_dir, "arisense/SN000-063-db-file1.csv"), 
+                        "-o",
                         os.path.join(self.test_dir, "output.csv"),
                     ],
                     catch_exceptions=False
@@ -39,9 +40,10 @@ class SetupTestCase(unittest.TestCase):
 
     def test_clean_file_modulairpm_rawsd(self):
         runner = CliRunner()
-        result = runner.invoke(clean, 
+        result = runner.invoke(clean_command, 
                     [
                         os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), 
+                        "-o",
                         os.path.join(self.test_dir, "output.csv"),
                     ],
                     catch_exceptions=False
@@ -59,9 +61,10 @@ class SetupTestCase(unittest.TestCase):
 
     def test_clean_file_modulairx_cloudapi(self):
         runner = CliRunner()
-        result = runner.invoke(clean, 
+        result = runner.invoke(clean_command, 
                     [
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
+                        "-o",
                         os.path.join(self.test_dir, "output.csv"),
                     ],
                     catch_exceptions=False
