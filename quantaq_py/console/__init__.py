@@ -1,6 +1,6 @@
 import pkg_resources
 import rich_click as click
-from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

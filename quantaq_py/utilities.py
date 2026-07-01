@@ -3,7 +3,7 @@ from pathlib import Path
 from loguru import logger
 import pandas as pd
 
-from quantaq_cli.exceptions import InvalidFileExtension
+from quantaq_py.exceptions import InvalidFileExtension
 
 
 def infer_data_source(df):

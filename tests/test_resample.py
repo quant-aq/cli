@@ -10,9 +10,9 @@ import pandas as pd
 from click.testing import CliRunner
 from loguru import logger
 
-from quantaq_cli.console import resample
-from quantaq_cli.console.commands.resample import resample_dataframe, WIND_COLUMNS
-from quantaq_cli.utilities import safe_load
+from quantaq_py.console import resample
+from quantaq_py.console.commands.resample import resample_dataframe, WIND_COLUMNS
+from quantaq_py.utilities import safe_load
 
 
 class SetupTestCase(unittest.TestCase):

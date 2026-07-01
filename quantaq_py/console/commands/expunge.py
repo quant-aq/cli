@@ -4,10 +4,10 @@ import click
 import numpy as np
 import pandas as pd
 
-from quantaq_cli.exceptions import InvalidFileExtension, InvalidDeviceModel
-from quantaq_cli.utilities import safe_load, determine_timestamp_column
-from quantaq_cli.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS
-from quantaq_cli.console.commands.flag import (
+from quantaq_py.exceptions import InvalidFileExtension, InvalidDeviceModel
+from quantaq_py.utilities import safe_load, determine_timestamp_column
+from quantaq_py.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS
+from quantaq_py.console.commands.flag import (
     echo_flag_table
 )
 

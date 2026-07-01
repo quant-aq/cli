@@ -8,12 +8,12 @@ import rich
 from rich.table import Table
 from terminaltables import SingleTable
 
-from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_CRITERIA, get_flag_criteria
-from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
-from quantaq_cli.variables import Range, Gap
-from quantaq_cli.utilities import determine_timestamp_column, safe_load
-from quantaq_cli.utilities import infer_data_source, infer_data_model
-from quantaq_cli.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
+from quantaq_py.variables import FLAG_DEFINITIONS, FLAG_CRITERIA, get_flag_criteria
+from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_py.variables import Range, Gap
+from quantaq_py.utilities import determine_timestamp_column, safe_load
+from quantaq_py.utilities import infer_data_source, infer_data_model
+from quantaq_py.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 
 
 def add_flag(df, flag_name, flag_value, criterion):

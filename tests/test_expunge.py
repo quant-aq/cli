@@ -9,9 +9,9 @@ from pandas.testing import assert_frame_equal
 
 import numpy as np
 
-from quantaq_cli.console import expunge
-from quantaq_cli.console.commands.expunge import expunge_dataframe
-from quantaq_cli.console.commands.flag import (
+from quantaq_py.console import expunge
+from quantaq_py.console.commands.expunge import expunge_dataframe
+from quantaq_py.console.commands.flag import (
     flag_dataframe,
     flag_summary,
 )

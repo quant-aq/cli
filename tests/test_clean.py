@@ -6,7 +6,7 @@ import os
 import shutil, tempfile
 import pandas as pd
 
-from quantaq_cli.console import clean
+from quantaq_py.console import clean
 
 
 class SetupTestCase(unittest.TestCase):

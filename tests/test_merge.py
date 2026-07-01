@@ -6,8 +6,8 @@ import os
 import shutil, tempfile
 import pandas as pd
 
-from quantaq_cli.console import merge, concat
-from quantaq_cli.utilities import safe_load
+from quantaq_py.console import merge, concat
+from quantaq_py.utilities import safe_load
 
 
 class SetupTestCase(unittest.TestCase):
