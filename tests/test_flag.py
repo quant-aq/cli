@@ -48,14 +48,12 @@ class SetupTestCase(unittest.TestCase):
     #def test_flag_files_modulairx_rawsd(self):
     #    NOTE: not currently implemented
     #    runner = CliRunner()
-    #    result = runner.invoke(flag, 
+    #    result = runner.invoke(flag_command, 
     #                [
     #                    "-o",
     #                    os.path.join(self.test_dir, "output.csv"),
     #                    "-v",
     #                    os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
-    #                    "modulair-x",
-    #                    "rawsd"
     #                ], catch_exceptions=False
     #            )
         

@@ -147,8 +147,8 @@ def flag_command(file, output, log_level):
 
     logger.info("File to read: {}", file)
 
-    # load the file
-    df = safe_load(file)
+    # load the file -- add the sn column if its a rawSD file
+    df = safe_load(file, add_sn_column=True)
 
     # flag the dataframe
     logger.info("Original flag summary:")

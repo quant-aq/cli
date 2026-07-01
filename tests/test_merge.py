@@ -123,7 +123,6 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"))
 
-            print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
             self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
 
     def test_merge_files_modulairx_cloudapi(self):
@@ -158,6 +157,5 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"))
 
-            print(df1.shape[1], df2.shape[1], df3.shape[1], flush=True)
             self.assertEqual(df1.shape[1] + df2.shape[1] - 1, df3.shape[1])
             
