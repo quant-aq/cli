@@ -76,19 +76,19 @@ def resample(file, rule, output, verbose, **kwargs):
 @click.option("-t", "--table", is_flag=True, help="Print as a dict instead of as a table")
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def expunge(file, dry_run, table, output, flag, verbose, model, **kwargs):
+def expunge(file, dry_run, table, output, verbose):
     """Expunge (NaN flagged values) FILE and save to OUTPUT.
     """
     from .commands.expunge import expunge_command
 
-    expunge_command(file, output, dry_run=dry_run, verbose=verbose, table=table, **kwargs)
+    expunge_command(file, output, dry_run=dry_run, verbose=verbose, table=table)
 
 
 @click.command("flag", short_help="flag data based on specific criteria")
 @click.argument("file", nargs=1, type=click.Path())
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-def flag(file, output, verbose, model, source, **kwargs):
+def flag(file, output, verbose):
     """Reflag a data file"""
     from .commands.flag import flag_command
 
