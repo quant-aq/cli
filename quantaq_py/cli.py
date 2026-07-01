@@ -1,6 +1,7 @@
 from pathlib import Path
-import click
 
+import pkg_resources
+import rich_click as click
 from loguru import logger
 
 from quantaq_py import concat_files, merge_files, resample_dataframe, clean_file
@@ -9,6 +10,20 @@ from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
 from quantaq_py.resample import WIND_COLUMNS
 from quantaq_py.utilities import safe_load
+from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
+
+
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+__version__ = pkg_resources.get_distribution('quantaq_py').version
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(__version__)
+@click.pass_context
+def main(ctx):
+    pass
+
 
 
 @click.command("concat")
@@ -229,3 +244,11 @@ def clean_command(filepath, output, log_level):
         df.to_csv(output, index=False)
     else:
         df.to_parquet(output, index=False)
+
+# add the commands one-by-one
+main.add_command(concat_command)
+main.add_command(merge_command)
+main.add_command(resample_command)
+main.add_command(expunge_command)
+main.add_command(flag_command)
+main.add_command(clean_command)
