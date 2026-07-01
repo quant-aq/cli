@@ -4,7 +4,7 @@ import click
 from loguru import logger
 
 from quantaq_py import concat_files, merge_files, resample_dataframe
-from quantaq_py import flag_dataframe, echo_flag_table
+from quantaq_py import flag_dataframe, echo_flag_table, expunge_dataframe
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
 from quantaq_py.resample import WIND_COLUMNS
@@ -166,3 +166,40 @@ def flag_command(file, output, log_level):
     else:
         df.to_parquet(output, index=False)
         
+
+@click.command("expunge")
+@click.argument("file", nargs=1, type=click.Path())
+@click.option("-d", "--dry-run", is_flag=True, help="Print table to screen and bypass file save")
+@click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
+@click.option("--log-level", default="INFO",
+              type=click.Choice(LOG_LEVELS, case_sensitive=False),
+              help="loguru log level (default: INFO)")
+def expunge_command(file, output, log_level, dry_run):
+
+    configure_logging(log_level)
+
+    output = Path(output)
+    if output.suffix not in (".csv", ".feather"):
+        raise InvalidFileExtension("Invalid file extension")
+
+    logger.info("Expunging data for {}", file)
+
+    df = safe_load(file)
+    show_summary = dry_run or log_level == "INFO"
+
+    if show_summary:
+        logger.info("Original flag summary:")
+        echo_flag_table(df)
+
+    df_expunged = expunge_dataframe(df)
+
+    if show_summary:
+        logger.info("New flag summary:")
+        echo_flag_table(df_expunged)
+
+    if not dry_run:
+        logger.info("Saving file to {}", output)
+        if output.suffix == ".csv":
+            df_expunged.to_csv(output, index=False)
+        else:
+            df_expunged.to_parquet(output, index=False)
