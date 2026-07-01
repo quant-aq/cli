@@ -75,15 +75,13 @@ def resample(file, rule, output, verbose, **kwargs):
 @click.option("-d", "--dry-run", is_flag=True, help="Print table to screen and bypass file save")
 @click.option("-t", "--table", is_flag=True, help="Print as a dict instead of as a table")
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
-@click.option("-f", "--flag", default="flag", help="The name of the flag column", type=str)
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode (debugging)")
-@click.option("-m", "--model", default="modulair_pm", help="The device model type. One of {}".format(SUPPORTED_MODELS))
 def expunge(file, dry_run, table, output, flag, verbose, model, **kwargs):
     """Expunge (NaN flagged values) FILE and save to OUTPUT.
     """
     from .commands.expunge import expunge_command
 
-    expunge_command(file, output, flagcol=flag, dry_run=dry_run, verbose=verbose, model=model, table=table, **kwargs)
+    expunge_command(file, output, dry_run=dry_run, verbose=verbose, table=table, **kwargs)
 
 
 @click.command("flag", short_help="flag data based on specific criteria")

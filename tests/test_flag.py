@@ -24,8 +24,6 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
-                        "modulair",
-                        "database"
                     ], catch_exceptions=False
                 )
         
@@ -76,8 +74,6 @@ class SetupTestCase(unittest.TestCase):
                         os.path.join(self.test_dir, "output.csv"),
                         "-v",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
-                        "modulair-x",
-                        "cloudapi"
                     ], catch_exceptions=False
                 )
         
