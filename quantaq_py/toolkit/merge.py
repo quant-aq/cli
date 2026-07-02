@@ -5,7 +5,7 @@ from quantaq_py.utilities import safe_load, fix_timestamps
 
 
 def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="both"):
-    """Merge multiple files on a timestamp column.
+    """Merge two files on a timestamp column.
 
     Args:
         files (list): List of file paths to merge.
@@ -26,6 +26,10 @@ def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="bo
     Returns:
         pd.DataFrame: the merged DataFrame
     """
+    if len(files)>2:
+        logger.error("Attempting to merge >2 files at a time.")
+        raise ValueError
+    
     if keep not in ("both", "left", "right"):
         raise ValueError(f"keep must be one of 'both', 'left', 'right'; got {keep!r}")
 
@@ -35,8 +39,7 @@ def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="bo
     df = pd.DataFrame()
     logger.info("Parsing {} files", len(files))
 
-    # Find the best timestamp column from the first file, and use it for merging
-    # if found in subsequent files.
+    # Find the best timestamp column from the first file, and use it for merging with the second file.
     for f in files:
         logger.debug("Parsing {}", f)
         tmp = safe_load(f)
@@ -55,7 +58,7 @@ def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="bo
         tmp = fix_timestamps(tmp, set_index=True, sort_values=True, localize_tz=True)
 
         # merge with the other files
-        merged_df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer', suffixes=suffixes)
+        df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer', suffixes=suffixes)
 
         # resolve overlapping columns down to one side, if desired
         if keep != "both":
@@ -63,8 +66,8 @@ def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="bo
             drop_suffix, _ = (
                 (right_suffix, left_suffix) if keep == "left" else (left_suffix, right_suffix)
             )
-            merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith(drop_suffix)]
+            df = df.loc[:, ~df.columns.str.endswith(drop_suffix)]
 
-    merged_df = merged_df.reset_index()  # bring timestamp back as a column named `tscol`
+    df = df.reset_index()  # bring timestamp back as a column named `tscol`
 
-    return merged_df
+    return df
