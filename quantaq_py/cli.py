@@ -25,6 +25,18 @@ def main(ctx):
     pass
 
 
+def save_file(df, output):
+    """Helper func to save a DataFrame to disk as CSV or parquet.
+
+    Args:
+        df (pd.DataFrame): DataFrame to save
+        output (Path): Destination filepath.
+    """
+    logger.info("Saving file to {}", output)
+    if output.suffix == ".csv":
+        df.to_csv(output, index=False)
+    else:
+        df.to_parquet(output, index=False)
 
 @click.command("concat")
 @click.argument("files", nargs=-1, type=click.Path())
@@ -47,12 +59,7 @@ def concat_command(files, output, log_level):
     df = concat_files(files)
 
     # save the file
-    logger.info("Saving file to {}", output)
-
-    if output.suffix == ".csv":
-        df.to_csv(output, index=False)
-    else:
-        df.to_parquet(output, index=False)
+    save_file(df, output)
 
 
 @click.command("merge", short_help="merge two files together on their timestamp")
@@ -77,11 +84,7 @@ def merge_command(files, output, tscol, log_level):
     df = merge_files(files, tscol)
            
     # save the file
-    logger.info("Saving file to {}", output)
-    if output.suffix == ".csv":
-        df.to_csv(output, index=False)
-    else:
-        df.to_parquet(output, index=False)
+    save_file(df, output)
 
 
 @click.command("resample", short_help="up/down sample data")
@@ -138,11 +141,7 @@ def resample_command(file, rule, output, log_level, **kwargs):
     )
 
     # save the file
-    logger.info("Saving file to {}", output)
-    if output.suffix == ".csv":
-        df.to_csv(output, index=False)
-    else:
-        df.to_parquet(output, index=False)
+    save_file(df, output)
 
 
 @click.command("flag")
@@ -169,11 +168,7 @@ def flag_command(file, output, log_level):
     df = flag_dataframe(df)
 
     # save the file
-    logger.info("Saving file to {}", output)
-    if output.suffix == ".csv":
-        df.to_csv(output, index=False)
-    else:
-        df.to_parquet(output, index=False)
+    save_file(df, output)
         
 
 @click.command("expunge")
@@ -207,11 +202,7 @@ def expunge_command(file, output, log_level, dry_run):
         echo_flag_table(df_expunged)
 
     if not dry_run:
-        logger.info("Saving file to {}", output)
-        if output.suffix == ".csv":
-            df_expunged.to_csv(output, index=False)
-        else:
-            df_expunged.to_parquet(output, index=False)
+        save_file(df, output)
 
 
 @click.command("clean")
@@ -232,11 +223,7 @@ def clean_command(file, output, log_level):
     df = safe_load(file)
     df = clean_dataframe(df)
     # save the file
-    logger.info("Saving file to {}", output)
-    if output.suffix == ".csv":
-        df.to_csv(output, index=False)
-    else:
-        df.to_parquet(output, index=False)
+    save_file(df, output)
 
 # add the commands one-by-one
 main.add_command(concat_command)
