@@ -4,17 +4,31 @@ import pandas as pd
 from quantaq_py.utilities import safe_load, fix_timestamps
 
 
-def merge_files(files, tscol="timestamp"):
+def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="both"):
     """Merge multiple files on a timestamp column.
 
     Args:
         files (list): List of file paths to merge.
-        tscol (str, optional): Name of the timestamp column. Default is "timestamp".    
+        tscol (str, optional): Name of the timestamp column. Default is "timestamp".
+        suffixes (tuple, optional): A length-2 sequence where each element is
+            a string indicating the suffix to add to overlapping column names
+            in the left and right DataFrames, respectively. Default is
+            ("_left", "_right").
+        keep (str, optional): Which side to keep for columns that overlap
+            between files: "both" keeps both suffixed columns, "left" keeps
+            only the left/earlier file's version, "right" keeps only the
+            right/later file's version. Default is "both". 
+            
+    Note!
+        If keep != "both" and you don't want to rename the columns to keep, the
+        suffix for columns to keep can be an empty string (i.e., suffixes=('', '_drop')).
 
     Returns:
         pd.DataFrame: the merged DataFrame
     """
-    
+    if keep not in ("both", "left", "right"):
+        raise ValueError(f"keep must be one of 'both', 'left', 'right'; got {keep!r}")
+
     # create an array of timestamp column names to try
     tscols = [tscol, "timestamp", "timestamp_local"]
 
@@ -32,7 +46,7 @@ def merge_files(files, tscol="timestamp"):
             if c in tmp.columns:
                 tscol = c
                 break
-                
+
         if not tscol in tmp.columns:
             logger.debug("Time {} was not found in the file; skipping file.", tscol)
             continue
@@ -41,8 +55,16 @@ def merge_files(files, tscol="timestamp"):
         tmp = fix_timestamps(tmp, set_index=True, sort_values=True, localize_tz=True)
 
         # merge with the other files
-        df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer')
-        
-    df = df.reset_index()  # bring timestamp back as a column named `tscol`
+        merged_df = pd.merge(df, tmp, left_index=True, right_index=True, how='outer', suffixes=suffixes)
 
-    return df
+        # resolve overlapping columns down to one side, if desired
+        if keep != "both":
+            left_suffix, right_suffix = suffixes
+            drop_suffix, _ = (
+                (right_suffix, left_suffix) if keep == "left" else (left_suffix, right_suffix)
+            )
+            merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith(drop_suffix)]
+
+    merged_df = merged_df.reset_index()  # bring timestamp back as a column named `tscol`
+
+    return merged_df
