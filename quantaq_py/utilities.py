@@ -67,6 +67,12 @@ def infer_data_model(df):
 def sn_to_model(device_sn):
     """Map a device serial number to its model string.
 
+    MOD-00246      -> modulair
+    MOD-PM-00933   -> modulair-pm
+    MOD-X-00993    -> modulair-x
+    MOD-X-PM-01685 -> modulair-x-pm
+    MOD-UFP-01685  -> modulair-ufp
+
     Args:
         device_sn (str): a device serial number (i.e. 'MOD-X-PM-01685')
     

@@ -22,6 +22,7 @@ class SetupTestCase(unittest.TestCase):
             ("MOD-PM-00933", "modulair-pm"),
             ("MOD-X-00993", "modulair-x"),
             ("MOD-X-PM-01685", "modulair-x-pm"),
+            ("MOD-UFP-01685", "modulair-ufp"),
         ]
         for sn, expected in cases:
             with self.subTest(sn=sn):
