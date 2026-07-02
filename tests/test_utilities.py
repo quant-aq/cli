@@ -29,14 +29,28 @@ class SetupTestCase(unittest.TestCase):
                 self.assertEqual(sn_to_model(sn), expected)
 
     def test_infer_data_model(self):
-        file = os.path.join(
-            self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"
-        )
-        expected = "modulair-x"
-        df = safe_load(file)
-        result = infer_data_model(df)
+        df1 = safe_load(os.path.join(
+            self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"))
+        df2 = safe_load(os.path.join(
+            self.test_files_dir, "modulair/MOD-00014-db-raw.csv"))
+        df3 = safe_load(os.path.join(
+            self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
+        df4 = safe_load(os.path.join(
+            self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
+        df5 = safe_load(os.path.join(
+            self.test_files_dir, "modulair-ufp/MOD-UFP-00002-rawsd.csv"))
 
-        self.assertEqual(result, expected)
+        cases = [
+            (df1, "modulair-pm"),
+            (df2, "modulair"),
+            (df3, "modulair-x"),
+            (df4, "modulair"),
+            (df5, "modulair-ufp"),
+        ]
+
+        for df, expected in cases:
+            with self.subTest(expected=expected):
+                self.assertEqual(infer_data_model(df), expected)
 
     def test_infer_data_source(self):
         df1 = safe_load(os.path.join(
@@ -47,12 +61,18 @@ class SetupTestCase(unittest.TestCase):
             self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
         df4 = safe_load(os.path.join(
             self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
-
+        df5 = safe_load(os.path.join(
+            self.test_files_dir, "modulair-ufp/MOD-UFP-00002-rawsd.csv"))
+        df6 = safe_load(os.path.join(
+            self.test_files_dir, "modulair-ufp/MOD-UFP-00002-rawsd-mixed-tdiffs.csv"))
+        
         cases = [
             (df1, "rawsd"),
             (df2, "database"),
             (df3, "cloudapi"),
             (df4, "database"),
+            (df5, "rawsd"),
+            (df6, "rawsd"),
         ]
 
         for df, expected in cases:
