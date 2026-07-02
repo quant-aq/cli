@@ -32,7 +32,7 @@ class SetupTestCase(unittest.TestCase):
             self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"
         )
         expected = "modulair-x"
-        df = safe_load(file, add_sn_column=True)
+        df = safe_load(file)
         result = infer_data_model(df)
 
         self.assertEqual(result, expected)

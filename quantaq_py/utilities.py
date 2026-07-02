@@ -2,8 +2,10 @@ from pathlib import Path
 
 from loguru import logger
 import pandas as pd
+import pandera.pandas as pa
 
 from quantaq_py.exceptions import InvalidFileExtension
+from quantaq_py.schema import build_dtype_schema, COLUMN_DEFINITIONS
 
 
 def infer_data_source(df):
@@ -57,7 +59,7 @@ def sn_to_model(device_sn):
     prefix, _, _ = device_sn.rpartition("-")
     return prefix.lower().replace("mod", "modulair", 1)
 
-def safe_load(fpath, add_sn_column=False):
+def safe_load(fpath, coerce_dtypes=False):
     """Load a CSV or parquet file"""
     
     p = Path(fpath)
@@ -76,13 +78,11 @@ def safe_load(fpath, add_sn_column=False):
         
         tmp = pd.read_csv(fpath, skiprows=3)
 
-        # Optionally add the sn as a column (required for flagging rawSD data)
-        if add_sn_column:
-            # Grab the serial number from the header
-            tmp2 = pd.read_csv(fpath, nrows=3, header=None)
-            serial_number = tmp2.iloc[2, 1]
-            tmp['sn'] = serial_number
-            logger.info("Added serial number {} to column `sn` ", serial_number)
+        # Always add the sn as a column for rawSD data
+        tmp2 = pd.read_csv(fpath, nrows=3, header=None)
+        serial_number = tmp2.iloc[2, 1]
+        tmp['sn'] = serial_number
+        logger.info("Added serial number {} to column `sn` ", serial_number)
         
     elif as_csv and tmp.shape[1] == 2: # hack to deal with bad header format
         tmp = pd.read_csv(fpath, skiprows=1)
@@ -93,6 +93,22 @@ def safe_load(fpath, add_sn_column=False):
     unnamed = [c for c in tmp.columns if str(c).startswith("Unnamed:")]
     if unnamed:
         tmp.drop(columns=unnamed, inplace=True)
+
+    # Check dtypes    
+    schema_field_dtypes = build_dtype_schema(COLUMN_DEFINITIONS)
+    try:
+        # print all dtype errors instead of raising on the first error
+        schema_field_dtypes.validate(tmp, lazy=True)
+    except pa.errors.SchemaErrors as err:
+        logger.error("Dtype validation failed for file {}.", fpath)
+        logger.debug("{}", err.failure_cases.to_string())
+        if coerce_dtypes:
+            logger.warning("Coercing dtypes to expected types.")
+            dtype_map = {
+                col: dtype for col, dtype in COLUMN_DEFINITIONS
+                if col in tmp.columns
+            }
+            tmp = tmp.astype(dtype_map)
 
     return tmp
 

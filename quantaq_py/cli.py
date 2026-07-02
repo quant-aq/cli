@@ -4,7 +4,7 @@ import pkg_resources
 import rich_click as click
 from loguru import logger
 
-from quantaq_py import concat_files, merge_files, resample_dataframe, clean_file
+from quantaq_py import concat_files, merge_files, resample_dataframe, clean_dataframe
 from quantaq_py import flag_dataframe, echo_flag_table, expunge_dataframe
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.log import configure_logging, LOG_LEVELS
@@ -160,8 +160,8 @@ def flag_command(file, output, log_level):
 
     logger.info("File to read: {}", file)
 
-    # load the file -- add the sn column if its a rawSD file
-    df = safe_load(file, add_sn_column=True)
+    # load the file
+    df = safe_load(file)
 
     # flag the dataframe
     logger.info("Original flag summary:")
@@ -234,8 +234,8 @@ def clean_command(filepath, output, log_level):
         raise InvalidFileExtension("Invalid file extension")
     
     logger.info("Cleaning data for {}", filepath)
-    df = clean_file(filepath)
-
+    df = safe_load(filepath)
+    df = clean_dataframe(df)
     # save the file
     logger.info("Saving file to {}", output)
     if output.suffix == ".csv":
