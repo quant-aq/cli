@@ -23,11 +23,12 @@ def concat_files(files):
 
     # concat all of the files together
     df = pd.concat(data, sort=False)
-
-    # sort based on a time column
-    df = fix_timestamps(df, sort_values=True)
     
     if df.empty:
-        raise Exception("No data")
+        logger.error("No data found after parsing {} files: {}", len(files), files)
+        raise ValueError
     
+    # sort based on a time column
+    df = fix_timestamps(df, sort_values=True)
+
     return df
