@@ -166,13 +166,7 @@ def flag_command(file, output, log_level):
     df = safe_load(file)
 
     # flag the dataframe
-    logger.info("Original flag summary:")
-    echo_flag_table(df)
-
     df = flag_dataframe(df)
-
-    logger.info("New flag summary:")
-    echo_flag_table(df)
 
     # save the file
     logger.info("Saving file to {}", output)

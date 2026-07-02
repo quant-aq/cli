@@ -1,14 +1,10 @@
 from pathlib import Path
 
-import click
-import pandas as pd
-import numpy as np
 from loguru import logger
+import pandas as pd
 import rich
 from rich.table import Table
-from terminaltables import SingleTable
 
-from quantaq_py.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 from quantaq_py.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
 from quantaq_py.variables import Range, Gap, flag_name_to_criteria
 from quantaq_py.utilities import fix_timestamps, determine_timestamp_column

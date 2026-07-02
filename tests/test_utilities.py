@@ -78,4 +78,3 @@ class SetupTestCase(unittest.TestCase):
         for df, expected in cases:
             with self.subTest(expected=expected):
                 self.assertEqual(infer_data_source(df), expected)
-

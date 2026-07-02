@@ -1,11 +1,11 @@
-import unittest
-from unittest import result
-from click.testing import CliRunner
-from os import path
-from pathlib import Path
 import os
-import shutil, tempfile
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
 import pandas as pd
+from click.testing import CliRunner
 
 from quantaq_py.cli import flag_command
 
@@ -34,9 +34,6 @@ class SetupTestCase(unittest.TestCase):
 
         # did it output the correct text?
         self.assertTrue("File to read" in result.output)
-
-        # check that flag summary table printed twice — once before flagging, once after
-        self.assertEqual(result.output.count("# OCCURENCES"), 2)
 
         # make sure the file exists
         p = Path(self.test_dir + "/output.csv")
@@ -88,9 +85,6 @@ class SetupTestCase(unittest.TestCase):
         # did it output the correct text?
         self.assertTrue("File to read" in result.output)
 
-        # check that flag summary table printed twice — once before flagging, once after
-        self.assertEqual(result.output.count("# OCCURENCES"), 2)
-
         # make sure the file exists
         p = Path(self.test_dir + "/output.csv")
         self.assertTrue(p.exists())
@@ -115,9 +109,6 @@ class SetupTestCase(unittest.TestCase):
 
         # did it output the correct text?
         self.assertTrue("File to read" in result.output)
-
-        # check that flag summary table printed twice — once before flagging, once after
-        self.assertEqual(result.output.count("# OCCURENCES"), 2)
 
         # make sure the file exists
         p = Path(self.test_dir + "/output.parquet")
