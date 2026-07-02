@@ -21,6 +21,7 @@ numpy = "^1.23.2"
 rich-click = ">=1.7.2"
 loguru = "^0.7.3"
 jupyter = "^1.1.1"
+pandera = ">=0.24,<0.29"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
