@@ -1,10 +1,18 @@
 from loguru import logger
 import pandas as pd
 
-from quantaq_py.utilities import safe_load, determine_timestamp_column
+from quantaq_py.utilities import safe_load, fix_timestamps
 
 def concat_files(files):
-    # read all files
+    """Concatenate multiple files into a single DataFrame and sort based on a 
+    timestamp column.
+
+    Args:
+        files (list): List of file paths to concatenate.
+
+    Returns:
+        pd.DataFrame: Concatenated and sorted DataFrame.
+    """
     data = []
     logger.info("Parsing {} files", len(files))
     for f in files:
@@ -17,8 +25,7 @@ def concat_files(files):
     df = pd.concat(data, sort=False)
 
     # sort based on a time column
-    tscol = determine_timestamp_column(df)
-    df = df.sort_values(by=tscol)
+    df = fix_timestamps(df, sort_values=True)
     
     if df.empty:
         raise Exception("No data")

@@ -26,7 +26,7 @@ _NEPH_COLUMNS = [
     "pm1_std", "pm25_std", "pm10_std", 
     "pm1_env", "pm25_env", "pm10_env",
     "neph_pm1_std", "neph_pm25_std", "neph_pm10_std", 
-    "neph_pm1_env", "neph_pm25_env", "neph_pm10_env"
+    "neph_pm1_env", "neph_pm25_env", "neph_pm10_env",
     "neph_bin0", "neph_bin1", "neph_bin2", "neph_bin3", "neph_bin4", "neph_bin5",
 ]
 
@@ -127,15 +127,30 @@ for _model in SUPPORTED_MODELS:
 # (besides name of column to be flagged)
 FLAG_CRITERIA["cloudapi"] = FLAG_CRITERIA["database"]
 
-SUPPORTED_SOURCES = FLAG_CRITERIA.keys()
+SUPPORTED_SOURCES = tuple(FLAG_CRITERIA.keys())
 
-def get_flag_criteria(source, model):
+def flag_name_to_criteria(source, model):
+    """Return the flag criteria for a given data source and data model.
+
+    Args:
+        source (str): the data source (in SUPPORTED_SOURCES)
+        model (str): the device model (in SUPPORTED_MODELS)
+
+    Returns:
+        dict: Mapping of flag name to flag criteria.
+
     """
-    source = 'rawsd' or 'database'
-    model = 'default', 'modulair', 'modulair-x'
-    """
+    if source not in SUPPORTED_SOURCES:
+        logger.error("Unsupported source: {!r}", source)
+        raise ValueError
+
+    if model not in SUPPORTED_MODELS:
+        logger.error("Unsupported model: {!r}", model)
+        raise ValueError
+
     if source == 'rawsd':
         logger.debug("{!r} flag criteria are not yet defined", source)
         raise NotImplementedError
+
     by_model = FLAG_CRITERIA[source]
     return by_model[model]

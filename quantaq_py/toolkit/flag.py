@@ -10,12 +10,26 @@ from terminaltables import SingleTable
 
 from quantaq_py.exceptions import InvalidFileExtension, InvalidArgument, InvalidDeviceModel
 from quantaq_py.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
-from quantaq_py.variables import Range, Gap, get_flag_criteria
-from quantaq_py.utilities import determine_timestamp_column, safe_load
+from quantaq_py.variables import Range, Gap, flag_name_to_criteria
+from quantaq_py.utilities import fix_timestamps, determine_timestamp_column
 from quantaq_py.utilities import infer_data_source, infer_data_model
 
 
-def add_flag(df, flag_name, flag_value, criterion):
+def _add_flag(df, flag_name, flag_value, criterion):
+    """Add a specific flag to a DataFrame based on a given criterion.
+
+    For each row that meets the specified criterion, this function modifies the 'flag' 
+    column by applying a bitwise OR operation with the given flag value.
+
+    Args:
+        df (pd.DataFrame): DataFrame to which the flag will be added.
+        flag_name (str): Name of the flag to be added.
+        flag_value (int): Bitmask value of the flag to be added.
+        criterion (Range or Gap): Logic based on which the flag will be added.
+    
+    Returns:
+        pd.DataFrame: DataFrame with the flag added.
+    """
     if isinstance(criterion, Range):
         if criterion.column in df.columns:
             col = df[criterion.column]
@@ -28,14 +42,9 @@ def add_flag(df, flag_name, flag_value, criterion):
             )
 
     elif isinstance(criterion, Gap):
-        # Find best timestamp column.
+        # sort based on a time column
+        df = fix_timestamps(df, sort_values=True)
         tscol = determine_timestamp_column(df)
-
-        # Force timestamp type
-        df[tscol] = df[tscol].map(pd.to_datetime)
-
-        # Sort by timestamp
-        df = df.sort_values(tscol)
 
         # Create a column to hold the time diff
         df["tdiff"] = df[tscol].diff().dt.total_seconds()
@@ -63,16 +72,11 @@ def add_flag(df, flag_name, flag_value, criterion):
 def flag_summary(df):
     """Create a table with a summary of flags.
 
-    Parameters
-    ----------
-    sensor_df
-        DataFrame with flags to summarize.
-
-    Returns
-    -------
-        A new DataFrame, suitable for human consumption.
-
-    TO DO: move this to flag.py after merging sc-20242
+    Args:
+        df (pd.DataFrame): DataFrame with flags to summarize.
+    
+    Returns:
+        pd.DataFrame: A new DataFrame, suitable for human consumption.
     """
 
     # create flag column if it doesn't exist
@@ -98,12 +102,8 @@ def flag_summary(df):
 def echo_flag_table(df):
     """Print a table of flag statistics for a DataFrame.
 
-    Parameters
-    ----------
-    sensor_df
-        DataFrame to describe.
-
-    TO DO: move this to flag.py after merging sc-20242
+    Args:
+        df (pd.DataFrame): DataFrame with flags to summarize.
     """
     explained_df = flag_summary(df)
 
@@ -119,23 +119,22 @@ def echo_flag_table(df):
     rich.print(table)
 
 def flag_dataframe(df):
-    """
-    df = pandas dataframe to be flagged (or re-flagged)
-    model = the sensor model (in SUPPORTED_MODELS)
-    source = the data source (database or rawsd, eventually cloudAPI as well)
+    """Re-flags a DataFrame by iterating through the FLAG_DEFINITIONS and calling
+    the _add_flag() function one-by-one.
+
+    Args:
+        df (pd.DataFrame): DataFrame to be flagged (or re-flagged).
+
+    Returns:
+        pd.DataFrame: The flagged DataFrame.
     """
     df = df.copy()
 
     model = infer_data_model(df)
     source = infer_data_source(df)
 
-    # ensure the model is valid
-    if model not in SUPPORTED_MODELS:
-        raise InvalidDeviceModel("Invalid device model. Must be one of {}".format(SUPPORTED_MODELS))
-    
-    # ensure the data source is valid
-    if source not in SUPPORTED_SOURCES:
-        raise NotImplementedError # add this to exceptions
+    # get flag criteria (this also checks if model and data source is valid)
+    name_to_criteria = flag_name_to_criteria(source, model).items()
 
     # create flag column if it doesn't exist
     if "flag" not in df.columns:
@@ -145,8 +144,8 @@ def flag_dataframe(df):
     FLAG_VALUES = {flag.name: flag.value for flag in FLAG_DEFINITIONS}
 
     # set the flag for each flag_name and their respective crtieria 
-    for flag_name, criteria in get_flag_criteria(source, model).items():
+    for flag_name, criteria in name_to_criteria:
         flag_value = FLAG_VALUES[flag_name]                      
         for criterion in criteria:              
-            df = add_flag(df, flag_name, flag_value, criterion)
+            df = _add_flag(df, flag_name, flag_value, criterion)
     return df

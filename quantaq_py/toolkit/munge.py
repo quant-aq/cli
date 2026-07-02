@@ -1,32 +1,30 @@
 import numpy as np
 from pathlib import Path
 import pandas as pd
+from loguru import logger
 
 from quantaq_py.exceptions import InvalidFileExtension
-from quantaq_py.utilities import determine_timestamp_column
+from quantaq_py.utilities import fix_timestamps
 
 
 def clean_dataframe(df):
     """Load a dataframe, clean it, and save to csv. 
 
-    Removes corrupt data and force columns to be the 
-    desired column type based on the specific column.
+    Args:
+        df (pd.DataFrame): DataFrame to clean.
     """
     
-    # Fix the timestamp column(s)
-    for c in ('timestamp', 'timestamp_local', 'timestamp_iso'):
-        if c in df.columns:
-            df[c] = pd.to_datetime(df[c], errors='coerce')
-    
-    # Set the index
-    tscol = determine_timestamp_column(df)
-    df = df.set_index(tscol)
+    # Fix the timestamp columns -- only if needed
+    df = fix_timestamps(df)
         
     # Force everything to be numeric
-    df = df.apply(pd.to_numeric, errors='coerce')
+    #df = df.apply(pd.to_numeric, errors='coerce') # is this necessary?
     
     # Drop the NaNs
     #df = df.dropna(how='any') # drop rows if ANY column is nan
-    df = df.dropna(how='all') # drop rows if EVERY column is nan
-            
+    all_nan_mask = df.isnull().all(axis=1)
+    if all_nan_mask.any():
+        logger.warning("Dropping {} rows with all NaN values", all_nan_mask.sum())
+        df = df.dropna(how='all') # drop rows if ALL columns are nan
+    
     return df

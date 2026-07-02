@@ -33,6 +33,7 @@ def main(ctx):
               type=click.Choice(LOG_LEVELS, case_sensitive=False),
               help="loguru log level (default: INFO)")
 def concat_command(files, output, log_level):
+    """Concat FILES and save to OUTPUT."""
     configure_logging(log_level)
 
     # make sure the extension is valid
@@ -63,7 +64,6 @@ def concat_command(files, output, log_level):
               help="loguru log level (default: INFO)")
 def merge_command(files, output, tscol, log_level):
     """Merge FILES together and save to OUTPUT."""
-    
     configure_logging(log_level)
 
     # make sure the extension is either a csv or parquet format
@@ -105,6 +105,7 @@ def merge_command(files, output, tscol, log_level):
 def resample_command(file, rule, output, log_level, **kwargs):
     """Resample FILE at INTERVAL and save to OUTPUT."""
     configure_logging(log_level)
+    
     on = kwargs.pop("on", "timestamp")
     by = kwargs.pop("by", None)
     wind = kwargs.pop("wind", WIND_COLUMNS)
@@ -151,6 +152,7 @@ def resample_command(file, rule, output, log_level, **kwargs):
               type=click.Choice(LOG_LEVELS, case_sensitive=False),
               help="loguru log level (default: INFO)")
 def flag_command(file, output, log_level):
+    """Flag FILE and save to OUTPUT."""
     configure_logging(log_level)
 
     # make sure the extension is either a csv or parquet format
@@ -188,7 +190,7 @@ def flag_command(file, output, log_level):
               type=click.Choice(LOG_LEVELS, case_sensitive=False),
               help="loguru log level (default: INFO)")
 def expunge_command(file, output, log_level, dry_run):
-
+    """Expunge FILE and save to OUTPUT."""
     configure_logging(log_level)
 
     output = Path(output)
@@ -219,22 +221,21 @@ def expunge_command(file, output, log_level, dry_run):
 
 
 @click.command("clean")
-@click.argument("filepath", nargs=1, type=click.Path())
+@click.argument("file", nargs=1, type=click.Path())
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("--log-level", default="INFO",
               type=click.Choice(LOG_LEVELS, case_sensitive=False),
               help="loguru log level (default: INFO)")
-def clean_command(filepath, output, log_level):
-    """Clean FILEPATH and save to SAVEPATH.
-    """
+def clean_command(file, output, log_level):
+    """Clean FILE and save to OUTPUT."""
     configure_logging(log_level)
 
     output = Path(output)
     if output.suffix not in (".csv", ".parquet"):
         raise InvalidFileExtension("Invalid file extension")
     
-    logger.info("Cleaning data for {}", filepath)
-    df = safe_load(filepath)
+    logger.info("Cleaning data for {}", file)
+    df = safe_load(file)
     df = clean_dataframe(df)
     # save the file
     logger.info("Saving file to {}", output)
