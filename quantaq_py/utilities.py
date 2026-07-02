@@ -196,8 +196,8 @@ def fix_timestamps(df, set_index=False, sort_values=False, localize_tz=False):
     if sort_values:
         df = df.sort_values(by=tscol)
 
-    # localize the timezone if needed
-    if localize_tz:
+    # localize the timezone if needed (should not do for timestamp_local)
+    if localize_tz and tscol in ("timestamp", "timestamp_iso"):
         df[tscol] = df[tscol].apply(lambda x: x.tz_localize("UTC") if not x.tzinfo else x)
 
     # Drop rows with NaN/NaT datetime indices
