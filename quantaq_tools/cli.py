@@ -4,18 +4,18 @@ import pkg_resources
 import rich_click as click
 from loguru import logger
 
-from quantaq_py import concat_files, merge_files, resample_dataframe, clean_dataframe
-from quantaq_py import flag_dataframe, echo_flag_table, expunge_dataframe
-from quantaq_py.exceptions import InvalidFileExtension
-from quantaq_py.log import configure_logging, LOG_LEVELS
-from quantaq_py.toolkit.resample import WIND_COLUMNS
-from quantaq_py.utilities import safe_load
-from quantaq_py.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_tools import concat_files, merge_files, resample_dataframe, clean_dataframe
+from quantaq_tools import flag_dataframe, echo_flag_table, expunge_dataframe
+from quantaq_tools.exceptions import InvalidFileExtension
+from quantaq_tools.log import configure_logging, LOG_LEVELS
+from quantaq_tools.toolkit.resample import WIND_COLUMNS
+from quantaq_tools.utilities import safe_load
+from quantaq_tools.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-__version__ = pkg_resources.get_distribution('quantaq_py').version
+__version__ = pkg_resources.get_distribution('quantaq_tools').version
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)

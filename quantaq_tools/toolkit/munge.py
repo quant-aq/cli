@@ -3,8 +3,8 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
-from quantaq_py.exceptions import InvalidFileExtension
-from quantaq_py.utilities import fix_timestamps, drop_unnamed
+from quantaq_tools.exceptions import InvalidFileExtension
+from quantaq_tools.utilities import fix_timestamps, drop_unnamed
 
 
 def clean_dataframe(df):

@@ -1,8 +1,8 @@
 import numpy as np
 from loguru import logger
 
-from quantaq_py.utilities import determine_timestamp_column
-from quantaq_py.variables import FLAG_DEFINITIONS
+from quantaq_tools.utilities import determine_timestamp_column
+from quantaq_tools.variables import FLAG_DEFINITIONS
 
 
 def expunge_dataframe(df):

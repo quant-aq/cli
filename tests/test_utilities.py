@@ -5,8 +5,8 @@ import unittest
 
 import numpy as np
 
-from quantaq_py.utilities import safe_load
-from quantaq_py.utilities import sn_to_model, infer_data_model, infer_data_source
+from quantaq_tools.utilities import safe_load
+from quantaq_tools.utilities import sn_to_model, infer_data_model, infer_data_source
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):

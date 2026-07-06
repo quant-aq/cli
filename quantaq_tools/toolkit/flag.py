@@ -5,10 +5,10 @@ import pandas as pd
 import rich
 from rich.table import Table
 
-from quantaq_py.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
-from quantaq_py.variables import Range, Gap, flag_name_to_criteria
-from quantaq_py.utilities import fix_timestamps, determine_timestamp_column
-from quantaq_py.utilities import infer_data_source, infer_data_model
+from quantaq_tools.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_tools.variables import Range, Gap, flag_name_to_criteria
+from quantaq_tools.utilities import fix_timestamps, determine_timestamp_column
+from quantaq_tools.utilities import infer_data_source, infer_data_model
 
 
 def _add_flag(df, flag_name, flag_value, criterion):

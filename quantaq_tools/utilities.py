@@ -4,8 +4,8 @@ from loguru import logger
 import pandas as pd
 import pandera.pandas as pa
 
-from quantaq_py.exceptions import InvalidFileExtension
-from quantaq_py.schema import build_dtype_schema, COLUMN_DEFINITIONS
+from quantaq_tools.exceptions import InvalidFileExtension
+from quantaq_tools.schema import build_dtype_schema, COLUMN_DEFINITIONS
 
 def drop_unnamed(df):
     """Drop unnamed columns.
