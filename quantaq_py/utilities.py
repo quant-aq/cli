@@ -7,6 +7,18 @@ import pandera.pandas as pa
 from quantaq_py.exceptions import InvalidFileExtension
 from quantaq_py.schema import build_dtype_schema, COLUMN_DEFINITIONS
 
+def drop_unnamed(df):
+    """Drop unnamed columns.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to prune columns of.
+    """
+
+    unnamed = [c for c in df.columns if str(c).startswith("Unnamed:")]
+    if unnamed:
+        df.drop(columns=unnamed, inplace=True)
+    return df 
+
 def infer_data_source(df, tscol=None):
     """Determine the data source (rawSD, cloudAPI, or database) from the 
     sampling frequency in the dataframe.
@@ -139,9 +151,7 @@ def safe_load(fpath, coerce_dtypes=True):
         tmp = pd.read_csv(fpath)
 
     # drop the extra column if it was added
-    unnamed = [c for c in tmp.columns if str(c).startswith("Unnamed:")]
-    if unnamed:
-        tmp.drop(columns=unnamed, inplace=True)
+    tmp = drop_unnamed(tmp)
 
     # Check dtypes    
     schema_field_dtypes = build_dtype_schema(COLUMN_DEFINITIONS)

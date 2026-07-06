@@ -4,7 +4,7 @@ import pandas as pd
 from loguru import logger
 
 from quantaq_py.exceptions import InvalidFileExtension
-from quantaq_py.utilities import fix_timestamps
+from quantaq_py.utilities import fix_timestamps, drop_unnamed
 
 
 def clean_dataframe(df):
@@ -28,4 +28,7 @@ def clean_dataframe(df):
         logger.warning("Dropping {} rows with all NaN values", all_nan_mask.sum())
         df = df.dropna(how='all') # drop rows if ALL columns are nan
     
+    # Remove unnamed columns
+    df = drop_unnamed(df)
+
     return df
