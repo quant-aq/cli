@@ -8,14 +8,15 @@ from quantaq_py.utilities import fix_timestamps
 
 
 def clean_dataframe(df):
-    """Load a dataframe, clean it, and save to csv. 
-
+    """Load a dataframe, set timestamp to sorted, timezone-aware datetime index,
+    drop rows where all columns are NaN.
+    
     Args:
         df (pd.DataFrame): DataFrame to clean.
     """
     
     # Fix the timestamp columns -- only if needed
-    df = fix_timestamps(df)
+    df = fix_timestamps(df, set_index=True, sort_values=True, localize_tz=True)
         
     # Force everything to be numeric
     #df = df.apply(pd.to_numeric, errors='coerce') # is this necessary?
