@@ -110,7 +110,7 @@ def merge_command(files, output, tscol, log_level):
     nargs=4,
     type=str,
     default=("wx_u", "wx_v", "wx_ws", "wx_wd"),
-    help="(u, v, speed, direction) column names",
+    help="(u, v, speed, direction) column names. The u/v columns don't need to be present in the dataframe, but the column names need to be specified.",
 )
 @click.option("--numeric_how", default="mean", help="Aggregation for numeric columns.")
 @click.option("--nonnumeric_how", default="first", help="Aggregation for non-numeric columns.")

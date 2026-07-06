@@ -77,8 +77,10 @@ def resample_dataframe(
         on: Name of the datetime column to resample over.
         by: Optional column(s) to group by first (e.g. ``"sn"``), so each
             device/location is resampled independently.
-        wind: ``(u, v, speed, direction)`` column names. When the u/v columns
-            are present, the speed/direction columns are NOT scalar-averaged;
+        wind: ``(u, v, speed, direction)`` column names. The u/v columns don't 
+            need to be present in the dataframe, but the column names still need to be
+            specified here. When the u/v columns are present in the dataframe, 
+            the speed/direction columns are NOT scalar-averaged;
             they are derived from the averaged u/v components instead (see
             ``_vector_wind``). If only speed/direction are present, the u/v
             components are first created from them (see ``_components_from_polar``).
