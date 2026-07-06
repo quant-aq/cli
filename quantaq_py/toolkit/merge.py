@@ -27,11 +27,14 @@ def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="bo
         pd.DataFrame: the merged DataFrame
     """
     if len(files)>2:
-        logger.error("Attempting to merge >2 files at a time.")
-        raise ValueError
+        error = ValueError("Attempting to merge >2 files at a time.")
+        logger.error(error)
+        raise error
     
     if keep not in ("both", "left", "right"):
-        raise ValueError(f"keep must be one of 'both', 'left', 'right'; got {keep!r}")
+        error = ValueError(f"keep must be one of 'both', 'left', 'right'; got {keep!r}")
+        logger.error(error)
+        raise error
 
     # create an array of timestamp column names to try
     tscols = [tscol, "timestamp", "timestamp_local"]

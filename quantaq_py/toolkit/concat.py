@@ -16,7 +16,6 @@ def concat_files(files):
     data = []
     logger.info("Parsing {} files", len(files))
     for f in files:
-        
         logger.debug("Parsing {}", f)
         tmp = safe_load(f)
         data.append(tmp)
@@ -25,8 +24,9 @@ def concat_files(files):
     df = pd.concat(data, sort=False)
     
     if df.empty:
-        logger.error("No data found after parsing {} files: {}", len(files), files)
-        raise ValueError
+        error = ValueError(f"No data found after parsing {len(files)} files: {files}")
+        logger.error(error)
+        raise error
     
     # sort based on a time column
     df = fix_timestamps(df, sort_values=True)

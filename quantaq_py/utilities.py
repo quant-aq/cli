@@ -53,8 +53,9 @@ def infer_data_source(df, tscol=None):
         logger.info(f"Reading mostly {dominant_tdiff}s data --> inferring rawSD for modulair-ufp")
         return "rawsd"
     else:
-        logger.error(f"Unrecognized dominant sampling intervals: {dominant_tdiff}")
-        raise NotImplementedError
+        error = NotImplementedError(f"Unrecognized dominant sampling intervals: {dominant_tdiff}")
+        logger.error(error)
+        raise error
 
 def infer_data_model(df):
     """Infers the device model from the serial number in a dataframe.
@@ -66,12 +67,14 @@ def infer_data_model(df):
         str: the device model / data model
     """
     if "sn" not in df.columns:
-        logger.error("No serial number column found in dataframe, set `add_sn_column=True` when calling `safe_load`.")
-        raise ValueError
+        error = ValueError("No serial number column found in dataframe, set `add_sn_column=True` when calling `safe_load`.")
+        logger.error(error)
+        raise error
     sn_array = df['sn'].unique()
     if len(sn_array) > 1:
-        logger.error(f"Found {len(sn_array)} unique serial numbers: {sn_array}")
-        raise ValueError
+        error = ValueError(f"Found {len(sn_array)} unique serial numbers: {sn_array}")
+        logger.error(error)
+        raise error
     device_sn = sn_array.item()
     device_model = sn_to_model(device_sn)
     return device_model
@@ -113,7 +116,9 @@ def safe_load(fpath, coerce_dtypes=True):
     elif p.suffix == ".parquet":
         as_csv = False
     else:
-        raise InvalidFileExtension
+        error = InvalidFileExtension(f"Invalid file extension; got {p.suffix!r}")
+        logger.error(error)
+        raise error
 
     tmp = pd.read_csv(fpath, nrows=1, header=None) if as_csv else pd.read_parquet(fpath)
 
@@ -169,7 +174,9 @@ def determine_timestamp_column(df):
         if col in df.columns:
             return col
 
-    raise ValueError(f"Couldn't find a timestamp column: {df.columns}")
+    error = ValueError(f"Couldn't find a timestamp column: {df.columns}")
+    logger.error(error)
+    raise error 
 
 def fix_timestamps(df, set_index=False, sort_values=False, localize_tz=False):
     """Fix the timestamps (convert to datetime index, sort by 

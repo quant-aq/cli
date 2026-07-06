@@ -141,16 +141,19 @@ def flag_name_to_criteria(source, model):
 
     """
     if source not in SUPPORTED_SOURCES:
-        logger.error("Unsupported source: {!r}", source)
-        raise ValueError
+        error = ValueError(f"Unsupported source: {source!r}")
+        logger.error(error)
+        raise error
 
     if model not in SUPPORTED_MODELS:
-        logger.error("Unsupported model: {!r}", model)
-        raise ValueError
+        error = ValueError(f"Unsupported model: {model!r}")
+        logger.error(error)
+        raise error
 
     if source == 'rawsd':
-        logger.debug("{!r} flag criteria are not yet defined", source)
-        raise NotImplementedError
-
+        error = NotImplementedError(f"{source!r} flag criteria are not yet defined.")
+        logger.error(error)
+        raise error
+    
     by_model = FLAG_CRITERIA[source]
     return by_model[model]
