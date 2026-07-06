@@ -9,7 +9,7 @@ from quantaq_py.utilities import fix_timestamps, drop_unnamed
 
 def clean_dataframe(df):
     """Load a dataframe, set timestamp to sorted, timezone-aware datetime index,
-    drop rows where all columns are NaN.
+    drop rows where all columns are NaN, remove unnamed columns.
     
     Args:
         df (pd.DataFrame): DataFrame to clean.
