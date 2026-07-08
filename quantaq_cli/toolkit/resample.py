@@ -5,7 +5,7 @@ import click
 from loguru import logger
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
+from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
 
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.utilities import safe_load
@@ -77,8 +77,10 @@ def resample_dataframe(
         on: Name of the datetime column to resample over.
         by: Optional column(s) to group by first (e.g. ``"sn"``), so each
             device/location is resampled independently.
-        wind: ``(u, v, speed, direction)`` column names. When the u/v columns
-            are present, the speed/direction columns are NOT scalar-averaged;
+        wind: ``(u, v, speed, direction)`` column names. The u/v columns don't 
+            need to be present in the dataframe, but the column names still need to be
+            specified here. When the u/v columns are present in the dataframe, 
+            the speed/direction columns are NOT scalar-averaged;
             they are derived from the averaged u/v components instead (see
             ``_vector_wind``). If only speed/direction are present, the u/v
             components are first created from them (see ``_components_from_polar``).
@@ -89,8 +91,8 @@ def resample_dataframe(
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
     """
-    if type(df[on]) != np.datetime64:
-        df[on] = df[on].map(pd.to_datetime)
+    if not is_datetime64_any_dtype(df[on]):
+        df[on] = pd.to_datetime(df[on])
 
     keys = [by] if isinstance(by, str) else list(by or [])
 
@@ -160,49 +162,3 @@ def resample_dataframe(
         len(df), len(out), rule, f" grouped by {keys}" if keys else "",
     )
     return out
-
-def resample_command(file, rule, output, **kwargs):
-    verbose = kwargs.pop("verbose", False)
-    on = kwargs.pop("on", "timestamp")
-    by = kwargs.pop("by", None)
-    wind = kwargs.pop("wind", WIND_COLUMNS)
-    numeric_how = kwargs.pop("numeric_how", "mean")
-    nonnumeric_how = kwargs.pop("nonnumeric_how", "first")
-
-    # make sure the extension is either a csv or feather format
-    output = Path(output)
-    if output.suffix not in (".csv", ".feather"):
-        raise InvalidFileExtension("Invalid file extension")
-
-    save_as_csv = True if output.suffix == ".csv" else False
-
-    # concat everything in filepath
-    if verbose:
-        click.secho("Files to read: {}".format(file), fg='green')
-
-    # load the file
-    df = safe_load(file)
-
-    # if column to resample over needs to be made a datetime obj, do so
-    if on not in df.columns:
-        raise Exception("Invalid column name for the timestamp")
-
-    # resample
-    df = resample_dataframe(
-        df,
-        rule,
-        on=on,
-        by=by,
-        wind=wind,
-        numeric_how=numeric_how,
-        nonnumeric_how=nonnumeric_how,
-    )
-
-    # save the file
-    if verbose:
-        click.secho("Saving file to {}".format(output), fg='green')
-
-    if save_as_csv:
-        df.to_csv(output)
-    else:
-        df.reset_index().to_feather(output)
