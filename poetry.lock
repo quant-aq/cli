@@ -3014,19 +3014,23 @@ test = ["cython (>=3.0)", "defusedxml (>=0.7.1)", "pytest (>=8.0)", "setuptools 
 
 [[package]]
 name = "sphinx-click"
-version = "5.2.1"
+version = "6.2.0"
 description = "Sphinx extension that automatically documents click applications"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 files = [
-    {file = "sphinx_click-5.2.1-py3-none-any.whl", hash = "sha256:7aaa97bdce6fe315b3e719c085cd566e75470cbd91f1f6998b91213a09b8e7ec"},
-    {file = "sphinx_click-5.2.1.tar.gz", hash = "sha256:a669773f76db05a3e04c163da91cd5e7db1a4761a6ea9eb074404a393094cde7"},
+    {file = "sphinx_click-6.2.0-py3-none-any.whl", hash = "sha256:1fb1851cb4f2c286d43cbcd57f55db6ef5a8d208bfc3370f19adde232e5803d7"},
+    {file = "sphinx_click-6.2.0.tar.gz", hash = "sha256:fc78b4154a4e5159462e36de55b8643747da6cda86b3b52a8bb62289e603776c"},
 ]
 
 [package.dependencies]
-click = ">=7.0"
+click = ">=8.0"
 docutils = "*"
-sphinx = ">=2.0"
+sphinx = ">=4.0"
+
+[package.extras]
+docs = ["reno"]
+test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "sphinx-rtd-theme"
@@ -3517,4 +3521,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.14"
-content-hash = "4be6ac677c354c91423d1bf21ac9538be65daf86604d6342a110c5f0ab41a6e4"
+content-hash = "525a4014c5d492642cc7e94dc4c39215dcab8a21363d018e364869de1e3b5226"

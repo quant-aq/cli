@@ -35,6 +35,7 @@ release = version
 
 
 # -- General configuration ---------------------------------------------------
+autosummary_generate = True
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -42,9 +43,10 @@ release = version
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon', # google-style docstrings
     'sphinx_click.ext',
     'sphinx.ext.intersphinx',
-    'recommonmark',
+    'myst_parser',
     "sphinx_rtd_theme"
 ]
 
