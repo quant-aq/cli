@@ -20,6 +20,8 @@ class _InterceptHandler(logging.Handler):
             depth += 1
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
+_NOISY_LOGGERS = ("matplotlib", "urllib3")
+
 def configure_logging(level: str = "INFO") -> None:
     """Reset loguru to log to stderr at the given level.
     
@@ -33,4 +35,6 @@ def configure_logging(level: str = "INFO") -> None:
     logger.remove()
     logger.add(sys.stderr, level=level.upper())
     logging.basicConfig(handlers=[_InterceptHandler()], level=0, force=True)
-    
+    for name in _NOISY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
+        
