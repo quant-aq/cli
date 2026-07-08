@@ -8,12 +8,53 @@ CLI
    :prog: quantaq-tools
    :nested: full
 
+quantaq_tools.toolkit
+----------------------
 
-Python Library
---------------
+concat
+~~~~~~
 
-.. autosummary::
-   :toctree: _autosummary
-   :recursive:
+.. automodule:: quantaq_tools.toolkit.concat
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   quantaq_tools.toolkit
+expunge
+~~~~~~~
+
+.. automodule:: quantaq_tools.toolkit.expunge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+flag
+~~~~
+
+.. automodule:: quantaq_tools.toolkit.flag
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+merge
+~~~~~
+
+.. automodule:: quantaq_tools.toolkit.merge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+munge
+~~~~~
+
+.. automodule:: quantaq_tools.toolkit.munge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+resample
+~~~~~~~~
+
+.. automodule:: quantaq_tools.toolkit.resample
+   :members:
+   :undoc-members:
+   :show-inheritance:
