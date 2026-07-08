@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 from click.testing import CliRunner
 
-from quantaq_tools.cli import flag_command
+from quantaq_cli.cli import flag_command
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):

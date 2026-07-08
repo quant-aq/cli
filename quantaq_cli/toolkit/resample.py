@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
 
-from quantaq_tools.exceptions import InvalidFileExtension
-from quantaq_tools.utilities import safe_load
+from quantaq_cli.exceptions import InvalidFileExtension
+from quantaq_cli.utilities import safe_load
 
 
 # Default (u, v, speed, direction) column names for vector wind averaging.

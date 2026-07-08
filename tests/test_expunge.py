@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from quantaq_tools import expunge_dataframe, flag_summary
-from quantaq_tools.cli import expunge_command
+from quantaq_cli import expunge_dataframe, flag_summary
+from quantaq_cli.cli import expunge_command
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):

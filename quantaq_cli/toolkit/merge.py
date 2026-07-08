@@ -1,7 +1,7 @@
 from loguru import logger
 import pandas as pd
 
-from quantaq_tools.utilities import safe_load, fix_timestamps
+from quantaq_cli.utilities import safe_load, fix_timestamps
 
 
 def merge_files(files, tscol="timestamp", suffixes=('_left', '_right'), keep="both"):
