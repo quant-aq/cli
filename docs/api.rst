@@ -8,10 +8,12 @@ CLI
    :prog: quantaq-tools
    :nested: full
 
-quantaq_tools.toolkit
-----------------------
 
-.. automodule:: quantaq_tools.toolkit
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Python Library
+--------------
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   quantaq_tools.toolkit
