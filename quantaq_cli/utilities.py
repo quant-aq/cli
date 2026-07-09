@@ -54,7 +54,7 @@ def infer_data_source(df, tscol=None):
 
     if mostly_1min:
         logger.info(f"Reading mostly {dominant_tdiff}s data --> inferring database or cloud API")
-        if "api_received_at" in df.columns:
+        if "url" in df.columns:
             return "cloudapi"
         else:
             return "database"

@@ -161,6 +161,40 @@ class SetupTestCase(unittest.TestCase):
 
         self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
 
+    def test_resample_modulairx_db(self):
+        runner = CliRunner()
+        result = runner.invoke(resample_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"), 
+                        "10min",
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+        # are the number of lines correct?
+        df = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+        df['timestamp'] = df['timestamp'].map(pd.to_datetime)
+       
+        idx = df.timestamp.values
+
+        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
+
     def test_resample_modulair_db_parquet(self):
         runner = CliRunner()
         result = runner.invoke(resample_command, 
