@@ -1,4 +1,5 @@
 from collections import namedtuple
+import operator
 
 from loguru import logger
 
@@ -30,8 +31,8 @@ _NEPH_COLUMNS = [
     "neph_bin0", "neph_bin1", "neph_bin2", "neph_bin3", "neph_bin4", "neph_bin5",
 ]
 
-_RHTP_COLUMNS = [
-    "sample_rh", "sample_temp", "sample_pres", "rh", "temp"
+_RHT_COLUMNS = [
+    "sample_rh", "sample_temp", "rh", "temp"
 ]
 
 _CO_COLUMNS = [
@@ -61,10 +62,11 @@ _O3_COLUMNS = [
 
 # Flag Name, Flag Bitmask Value, Columns to Nan
 FLAG_DEFINITIONS = [
-    Flag("FLAG_STARTUP", 1, "all_columns"),
+    # when FLAG_STARTUP is set, nan all gas columns
+    Flag("FLAG_STARTUP", 1, _CO_COLUMNS + _NO_COLUMNS + _NO2_COLUMNS + _O3_COLUMNS),
     Flag("FLAG_OPC", 2, _OPC_COLUMNS),
     Flag("FLAG_NEPH", 4, _NEPH_COLUMNS),
-    Flag("FLAG_RHTP", 8, _RHTP_COLUMNS),
+    Flag("FLAG_RHT", 8, _RHT_COLUMNS),
     Flag("FLAG_CO", 16, _CO_COLUMNS),
     Flag("FLAG_NO", 32, _NO_COLUMNS),
     Flag("FLAG_NO2", 64, _NO2_COLUMNS),
@@ -74,67 +76,86 @@ FLAG_DEFINITIONS = [
     Flag("FLAG_H2S", 1024, ["h2s_we", "h2s_ae", "h2s_diff", "h2s"]),
     Flag("FLAG_BAT", 2048, ["bat_voltage", "soc", "vbat"]),
 ]
+FLAG_VALUES = {flag.name: flag.value for flag in FLAG_DEFINITIONS}
 
-SUPPORTED_MODELS = ("modulair", "modulair-x", "modulair-pm", "modulair-x-pm")
+SUPPORTED_MODELS = ("modulair", "modulair-x", "modulair-pm", "modulair-x-pm", "modulair-ufp")
 
-# Types of flag criteria
+# Types of flag criteria / sub-criteria
 Range = namedtuple("Range", ["column", "lo", "hi"])
-Gap = namedtuple("Gap", ["gap_in_seconds", "post_gap_flag_length_seconds"])
+Gap = namedtuple(
+    "Gap",
+    ["gap_in_seconds", "post_gap_flag_length_seconds", "warmup_min_lipo_soc"],
+    defaults=[None],  # defaults apply to the trailing fields, rightmost first
+)
+Single = namedtuple("Single", ["column", "op", "value"])  # op: '<', '<=', '>', '>=', '=='
+Multiple = namedtuple("Multiple", ["criteria", "logical_operator"])
+
+
+OPS = {
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+    "==": operator.eq,
+}
+
+DATABASE_CRITERIA = {
+    "FLAG_STARTUP": [
+        Gap(gap_in_seconds=60 * 60, post_gap_flag_length_seconds=4 * 60 * 60),
+        # warmup_min_lipo_soc defaults to None here
+    ],
+    "FLAG_RHT": [
+        # any one of these individually out-of-range
+        Range(column="sample_rh", lo=0.0, hi=100.0),
+        Range(column="sample_temp", lo=-60.0, hi=85.0),
+        Range(column="rh", lo=0.0, hi=100.0),
+        Range(column="temp", lo=-60.0, hi=85.0),
+
+        # OR: both sample_rh and sample_temp are exactly 0.0
+        Multiple(
+            criteria=(
+                Single(column="sample_rh", op="==", value=0.0),
+                Single(column="sample_temp", op="==", value=0.0),
+            ),
+            logical_operator="AND",
+            ),
+
+        # OR: both rh and temp are exactly 0.0 (AND)
+        Multiple(
+            criteria=(
+                Single(column="rh", op="==", value=0.0),
+                Single(column="temp", op="==", value=0.0),
+            ),
+            logical_operator="AND",
+            ),
+    ]}
+
+CLOUDAPI_CRITERIA = {
+    # flag criteria for cloudapi are the same as database
+    **DATABASE_CRITERIA, 
+}
+
+RAWSD_CRITERIA = {
+    **DATABASE_CRITERIA,
+    # flag criteria for rawsd are similar to database, except for FLAG_STARTUP and FLAG_OPC
+    "FLAG_STARTUP": [
+        Gap(gap_in_seconds=60 * 60, post_gap_flag_length_seconds=4 * 60 * 60, warmup_min_lipo_soc=0.1)
+    ],
+}
 
 FLAG_CRITERIA = {
-    "database": {
-        "default": {
-            "FLAG_STARTUP": [
-                Gap(60 * 60, 60 * 60)],
-            "FLAG_CO":  [
-                Range("co_ae", 535.0, 800.0),
-                Range("gases.co.ae", 535.0, 800.0)
-                ],
-            "FLAG_NO":  [
-                Range("no_ae", 640.0, 900.0),
-                Range("gases.no.ae", 640.0, 900.0)
-                ],
-            "FLAG_NO2": [
-                Range("no2_ae", 1600.0, 1700.0),
-                Range("gases.no2.ae", 1600.0, 1700.0)
-                ],
-            "FLAG_O3":  [
-                Range("o3_ae", 1600.0, 1700.0),
-                Range("gases.o3.ae", 1600.0, 1700.0),
-                ],
-            "FLAG_CO2": [
-                Range("co2_raw", 1000.0, 5000.0)],
-            "FLAG_OPC": [
-                Range("bin0", 0.0, 1e6),
-                Range("opc.bin0", 0.0, 1e6)
-                ],
-            #"FLAG_NEPH": [],
-            "FLAG_RHTP": [
-                Range("sample_rh", 0.0, 100.0),
-                Range("sample_temp", -60.0, 85.0),
-                Range("rh", 0.0, 100.0),
-                Range("temp", -60.0, 85.0),
-            ]},
-        },
-    "rawsd": {} # different logic applies
-    }
-
-# Assume all quant-aq products share the same database flagging criteria.
-for _model in SUPPORTED_MODELS:
-    FLAG_CRITERIA["database"][_model] = FLAG_CRITERIA["database"]["default"]
-
-# Assume cloudapi uses the same flag criteria as database
-# (besides name of column to be flagged)
-FLAG_CRITERIA["cloudapi"] = FLAG_CRITERIA["database"]
+    "database": DATABASE_CRITERIA,
+    "cloudapi": CLOUDAPI_CRITERIA,
+    "rawsd": RAWSD_CRITERIA
+}
 
 SUPPORTED_SOURCES = tuple(FLAG_CRITERIA.keys())
 
-def flag_name_to_criteria(source, model):
-    """Return the flag criteria for a given data source and data model.
+def flag_name_to_criteria(source):
+    """Return the flag criteria for a given data source.
 
     Args:
         source (str): the data source (in SUPPORTED_SOURCES)
-        model (str): the device model (in SUPPORTED_MODELS)
 
     Returns:
         dict: Mapping of flag name to flag criteria.
@@ -144,16 +165,5 @@ def flag_name_to_criteria(source, model):
         error = ValueError(f"Unsupported source: {source!r}")
         logger.error(error)
         raise error
-
-    if model not in SUPPORTED_MODELS:
-        error = ValueError(f"Unsupported model: {model!r}")
-        logger.error(error)
-        raise error
-
-    if source == 'rawsd':
-        error = NotImplementedError(f"{source!r} flag criteria are not yet defined.")
-        logger.error(error)
-        raise error
     
-    by_model = FLAG_CRITERIA[source]
-    return by_model[model]
+    return FLAG_CRITERIA[source]

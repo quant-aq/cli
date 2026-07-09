@@ -72,6 +72,9 @@ def infer_data_source(df, tscol=None):
 def infer_data_model(df):
     """Infers the device model from the serial number in a dataframe.
 
+    NOTE: not really used anymore because we standardized all flagging logic to
+    mod-X for all deivce models 
+    
     Args:
         df (pd.DataFrame): DataFrame to check.
     

@@ -5,14 +5,87 @@ import pandas as pd
 import rich
 from rich.table import Table
 
-from quantaq_cli.variables import FLAG_DEFINITIONS, SUPPORTED_MODELS, SUPPORTED_SOURCES
-from quantaq_cli.variables import Range, Gap, flag_name_to_criteria
+from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_VALUES
+from quantaq_cli.variables import Range, Gap, Single, Multiple, OPS, flag_name_to_criteria
 from quantaq_cli.utilities import fix_timestamps, determine_timestamp_column
-from quantaq_cli.utilities import infer_data_source, infer_data_model
+from quantaq_cli.utilities import infer_data_source
+
+def evaluate_criterion(df, criterion):
+    """Create a mask that is True for every row meeting the flag criterion.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to mask.
+        criterion: The rule used to decide which rows should be flagged. 
+    
+    Returns:
+        pd.Series: Boolean mask - True for rows that meet the criterion.
+    """
+    
+    if isinstance(criterion, Range):
+        if criterion.column not in df.columns:
+            return pd.Series(False, index=df.index)
+        col = df[criterion.column]
+        mask = (col < criterion.lo) | (col > criterion.hi)
+    
+    elif isinstance(criterion, Single):
+        if criterion.column not in df.columns:
+            return pd.Series(False, index=df.index)
+        col = df[criterion.column]
+        mask = OPS[criterion.op](col, criterion.value)
+
+    elif isinstance(criterion, Gap):
+        # to do: check if the dataframe is sorted here (this should be done before calling
+        # _evaluate_criterion() -- we don't want to sort the df in this block unless
+        # we also reindex the mask on the original df, so that we can combine masks
+
+        tscol = determine_timestamp_column(df)
+        tdiff = df[tscol].diff().dt.total_seconds()
+        
+        if criterion.warmup_min_lipo_soc is not None:
+            # if there's a warmup_min_lipo_soc criterion (as in RAWSD_CRITERIA),
+            # the gap_starts are defined if the device was offline for the past hour 
+            # AND if the LIPO SOC is < warmup_min_lipo_soc (10%)
+            gap_starts_mask = (tdiff > criterion.gap_in_seconds) & (df['soc'] < criterion.warmup_min_lipo_soc)
+            gap_starts = df.loc[gap_starts_mask, tscol]
+        else:
+            # if there's no warmup_min_lipo_soc criterion (as in DATABASE_CRITERIA),
+            # the gap_starts are defined only if the device was offine for the past hour
+            gap_starts = df.loc[tdiff > criterion.gap_in_seconds, tscol]
+        
+        # set mask to True for every row that falls within post_gap_flag_length_seconds 
+        # after any detected timestamp gap larger than gap_in_seconds
+        postgap_delta = pd.Timedelta(seconds=criterion.post_gap_flag_length_seconds)
+        mask = pd.Series(False, index=df.index)
+        for ts in gap_starts: 
+            mask |= (df[tscol] >= ts) & (df[tscol] <= ts + postgap_delta)
+            
+    elif isinstance(criterion, Multiple):
+        masks = [evaluate_criterion(df, c) for c in criterion.criteria]
+        if criterion.logical_operator == "AND":
+            # start with first mask and progressively AND the remaining ones
+            mask = masks[0]
+            for m in masks[1:]:
+                mask = mask & m
+        else:
+            # not bothering to implement logical_operator = "OR" because that's the
+            # default behavior for items in the top-level criteria lists. 
+            error = NotImplementedError(
+            f"Unsupported logical_operator: {criterion.logical_operator!r} "
+            f"(only 'AND' is implemented, use a regular criteria list for OR)"
+            )
+            logger.error(error)
+            raise error
+    else:
+        error = NotImplementedError(f"Unsupported criterion type: {type(criterion)}")
+        logger.error(error)
+        raise error
+
+    return mask
+      
 
 
-def _add_flag(df, flag_name, flag_value, criterion):
-    """Add a specific flag to a DataFrame based on a given criterion.
+def add_flag(df, mask, flag_name, flag_value):
+    """Set the 'flag' column to the flag bitmask value if the mask evaluates to true.
 
     For each row that meets the specified criterion, this function modifies the 'flag' 
     column by applying a bitwise OR operation with the given flag value.
@@ -21,47 +94,17 @@ def _add_flag(df, flag_name, flag_value, criterion):
         df (pd.DataFrame): DataFrame to which the flag will be added.
         flag_name (str): Name of the flag to be added.
         flag_value (int): Bitmask value of the flag to be added.
-        criterion (Range or Gap): Logic based on which the flag will be added.
+        mask (pd.Series): True where the flag criterion are true.
     
     Returns:
         pd.DataFrame: DataFrame with the flag added.
     """
-    if isinstance(criterion, Range):
-        if criterion.column in df.columns:
-            col = df[criterion.column]
-            mask = (col < criterion.lo) | (col > criterion.hi)
-            if not mask.sum():
-                return df
-            df.loc[mask, "flag"] |= flag_value
-            logger.info(
-                f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
-            )
-
-    elif isinstance(criterion, Gap):
-        # sort based on a time column
-        df = fix_timestamps(df, sort_values=True)
-        tscol = determine_timestamp_column(df)
-
-        # Create a column to hold the time diff
-        df["tdiff"] = df[tscol].diff().dt.total_seconds()
-
-        # If we're missing enough data, apply the startup flag.
-        startup_mask = df["tdiff"] > criterion.gap_in_seconds
-        starts = df.loc[startup_mask]
-        postgap_delta = pd.Timedelta(seconds=criterion.post_gap_flag_length_seconds)
-
-        for _, row in starts.iterrows():
-            # Flag everything between the startup flag's timestamp up to the gap.
-            mask = (df[tscol] >= row[tscol]) & (
-                df[tscol] <= (row[tscol] + postgap_delta)
-            )
-            df.loc[mask, "flag"] |= flag_value  
-            logger.info(
-                f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
-            )
-
-        # Delete the tdiff col
-        del df["tdiff"]
+    if not mask.any(): # skip if every value in the mask is False
+        return df
+    df.loc[mask, "flag"] |= flag_value  
+    logger.info(
+        f"Flagged: {flag_name} (flag {flag_value}) --> {mask.sum()} rows",
+    )
 
     return df
 
@@ -126,22 +169,22 @@ def flag_dataframe(df):
     """
     df = df.copy()
 
-    model = infer_data_model(df)
     source = infer_data_source(df)
 
-    # get flag criteria (this also checks if model and data source is valid)
-    name_to_criteria = flag_name_to_criteria(source, model).items()
+    # get flag criteria (this also checks if the data source is valid)
+    name_to_criteria = flag_name_to_criteria(source).items()
 
     # create flag column if it doesn't exist
     if "flag" not in df.columns:
         df["flag"] = 0
 
-    # get the flag values for each flag name
-    FLAG_VALUES = {flag.name: flag.value for flag in FLAG_DEFINITIONS}
+    # sort the dataframe once before adding flags
+    df = fix_timestamps(df, sort_values=True)
 
     # set the flag for each flag_name and their respective crtieria 
     for flag_name, criteria in name_to_criteria:
         flag_value = FLAG_VALUES[flag_name]                      
-        for criterion in criteria:              
-            df = _add_flag(df, flag_name, flag_value, criterion)
+        for criterion in criteria:
+            mask =  evaluate_criterion(df, criterion)             
+            df = add_flag(df, mask, flag_name, flag_value)
     return df
