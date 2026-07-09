@@ -128,7 +128,10 @@ DATABASE_CRITERIA = {
             ),
             logical_operator="AND",
             ),
-    ]}
+
+        # QUESTION: do we need/want to flag when sample_temp/temp or sample_rh/rh are nan?
+    ],
+    }
 
 CLOUDAPI_CRITERIA = {
     # flag criteria for cloudapi are the same as database

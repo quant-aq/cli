@@ -8,7 +8,7 @@ from rich.table import Table
 from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_VALUES
 from quantaq_cli.variables import Range, Gap, Single, Multiple, OPS, flag_name_to_criteria
 from quantaq_cli.utilities import fix_timestamps, determine_timestamp_column
-from quantaq_cli.utilities import infer_data_source
+from quantaq_cli.utilities import infer_data_source, infer_data_model
 
 def evaluate_criterion(df, criterion):
     """Create a mask that is True for every row meeting the flag criterion.
@@ -26,17 +26,27 @@ def evaluate_criterion(df, criterion):
             return pd.Series(False, index=df.index)
         col = df[criterion.column]
         mask = (col < criterion.lo) | (col > criterion.hi)
+        return mask
     
     elif isinstance(criterion, Single):
         if criterion.column not in df.columns:
             return pd.Series(False, index=df.index)
         col = df[criterion.column]
         mask = OPS[criterion.op](col, criterion.value)
+        return mask
 
     elif isinstance(criterion, Gap):
         # to do: check if the dataframe is sorted here (this should be done before calling
         # _evaluate_criterion() -- we don't want to sort the df in this block unless
         # we also reindex the mask on the original df, so that we can combine masks
+
+        # this block might need to live somewhere else, but basically, we don't bother
+        # to set FLAG_STARTUP for devices without gas measurements since only the 
+        # gas columns get nan'd when FLAG_STARTUP is set --- we don't have a 
+        # startup flag for other devices yet so this is mostly to avoid confusion
+        model = infer_data_model(df)
+        if model not in {"modulair", "modulair-x"}:
+            return pd.Series(False, index=df.index)
 
         tscol = determine_timestamp_column(df)
         tdiff = df[tscol].diff().dt.total_seconds()
@@ -58,6 +68,7 @@ def evaluate_criterion(df, criterion):
         mask = pd.Series(False, index=df.index)
         for ts in gap_starts: 
             mask |= (df[tscol] >= ts) & (df[tscol] <= ts + postgap_delta)
+        return mask
             
     elif isinstance(criterion, Multiple):
         masks = [evaluate_criterion(df, c) for c in criterion.criteria]
@@ -66,6 +77,7 @@ def evaluate_criterion(df, criterion):
             mask = masks[0]
             for m in masks[1:]:
                 mask = mask & m
+            return mask
         else:
             # not bothering to implement logical_operator = "OR" because that's the
             # default behavior for items in the top-level criteria lists. 
@@ -80,7 +92,6 @@ def evaluate_criterion(df, criterion):
         logger.error(error)
         raise error
 
-    return mask
       
 
 
