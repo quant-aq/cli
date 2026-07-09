@@ -79,7 +79,7 @@ def infer_data_model(df):
         str: the device model / data model
     """
     if "sn" not in df.columns:
-        error = ValueError("No serial number column found in dataframe, set `add_sn_column=True` when calling `safe_load`.")
+        error = ValueError("No serial number column found in dataframe. Use `safe_load` to read the file.")
         logger.error(error)
         raise error
     sn_array = df['sn'].unique()
