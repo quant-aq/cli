@@ -93,6 +93,43 @@ class SetupTestCase(unittest.TestCase):
 
         self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
 
+    def test_resample_modulairpm_rawsd_flagaware(self):
+        runner = CliRunner()
+        result = runner.invoke(resample_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), 
+                        "10min",
+                        "--on",
+                        "timestamp_iso",
+                        "--flag-aware"
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+        # are the number of lines correct?
+        df = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+        df['timestamp_iso'] = df['timestamp_iso'].map(pd.to_datetime)
+       
+        idx = df.timestamp_iso.values
+
+        self.assertEqual((idx[1] - idx[0]) / np.timedelta64(1, 's'), 600.0)
+
     def test_resample_modulairx_rawsd(self):
         runner = CliRunner()
         result = runner.invoke(resample_command, 
@@ -260,6 +297,37 @@ class SetupTestCase(unittest.TestCase):
         df2_resampled = resample_dataframe(df2, "10min")
         np.testing.assert_allclose(
             df2_resampled[["wx_wd", "wx_ws"]].to_numpy(),
+            expected.to_numpy(),
+            atol=atol, equal_nan=True,
+        )
+
+    def test_resample_dataframe_rawsd_flagaware(self):
+        file = os.path.join(
+            self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"
+        )
+        df = safe_load(file)
+
+        # case 1: flag_aware is True
+        df_resampled = resample_dataframe(df, "1min", flag_aware=True)
+        expected = pd.DataFrame(
+            {"flag": [0, 0],
+             "opc_pm1": [1.320000, 1.116667]},
+        )
+        atol = 1e-3
+        np.testing.assert_allclose(
+            df_resampled[["flag", "opc_pm1"]].to_numpy(),
+            expected.to_numpy(),
+            atol=atol, equal_nan=True,
+        )
+
+        # case 2: flag_aware is False
+        df_resampled = resample_dataframe(df, "1min", flag_aware=False)
+        expected = pd.DataFrame(
+            {"opc_pm1": [0.660000, 1.116667]},
+        )
+        atol = 1e-3
+        np.testing.assert_allclose(
+            df_resampled[["opc_pm1"]].to_numpy(),
             expected.to_numpy(),
             atol=atol, equal_nan=True,
         )
