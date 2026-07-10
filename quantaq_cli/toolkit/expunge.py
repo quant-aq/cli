@@ -1,5 +1,5 @@
-import numpy as np
 from loguru import logger
+import numpy as np
 
 from quantaq_cli.utilities import determine_timestamp_column
 from quantaq_cli.variables import FLAG_DEFINITIONS

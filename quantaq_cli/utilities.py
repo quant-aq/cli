@@ -7,6 +7,7 @@ import pandera.pandas as pa
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.schema import build_dtype_schema, COLUMN_DEFINITIONS
 
+
 def drop_unnamed(df):
     """Drop unnamed columns.
     

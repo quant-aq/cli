@@ -1,6 +1,6 @@
 from pathlib import Path
-
 import pkg_resources
+
 import rich_click as click
 from loguru import logger
 
@@ -10,7 +10,6 @@ from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.log import configure_logging, LOG_LEVELS
 from quantaq_cli.toolkit.resample import WIND_COLUMNS
 from quantaq_cli.utilities import safe_load
-from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])

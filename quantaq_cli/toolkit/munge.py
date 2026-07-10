@@ -1,9 +1,5 @@
-import numpy as np
-from pathlib import Path
-import pandas as pd
 from loguru import logger
 
-from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.utilities import fix_timestamps, drop_unnamed
 
 

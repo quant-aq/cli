@@ -3,6 +3,7 @@ import operator
 
 from loguru import logger
 
+
 Flag = namedtuple("Flag", ["name", "value", "nan_columns"])
 
 # Columns to Nan across all schema types (db, rawsd, cloudapi)
