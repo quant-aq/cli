@@ -1,14 +1,9 @@
 from __future__ import annotations
-from pathlib import Path
 
-import click
 from loguru import logger
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
-
-from quantaq_cli.exceptions import InvalidFileExtension
-from quantaq_cli.utilities import safe_load
 
 
 # Default (u, v, speed, direction) column names for vector wind averaging.
@@ -71,8 +66,14 @@ def _aggregate_group(group, agg):
     Returns:
         pd.Series: One aggregated row for this bin.
     """
-    # resample can produce empty bins so we also check len(group)
-    if 'flag' in group.columns and len(group): 
+    if 'flag' not in group.columns: 
+        error = ValueError("No 'flag' column found in dataframe! Cannot implement"
+        "flag-aware resampling. Consider calling flag_dataframe() first.")
+        logger.error(error)
+        raise error
+
+    # resample can produce empty bins so we check len(group)
+    if len(group): 
         clean_mask = group['flag'] == 0 # true for every good row
 
         # there's at least 1 good row --> aggregate only the good rows, and set the new flag to 0
