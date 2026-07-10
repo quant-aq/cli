@@ -75,6 +75,7 @@ FLAG_DEFINITIONS = [
     Flag("FLAG_SO2", 512, ["so2_we", "so2_ae", "so2_diff", "so2"]),
     Flag("FLAG_H2S", 1024, ["h2s_we", "h2s_ae", "h2s_diff", "h2s"]),
     Flag("FLAG_BAT", 2048, ["bat_voltage", "soc", "vbat"]),
+    Flag("FLAG_OVERHEAT", 4096, None), # QUESTION: should this be set to _OPC_COLUMNS?
 ]
 FLAG_VALUES = {flag.name: flag.value for flag in FLAG_DEFINITIONS}
 
@@ -88,6 +89,7 @@ Gap = namedtuple(
     defaults=[None],  # defaults apply to the trailing fields, rightmost first
 )
 Single = namedtuple("Single", ["column", "op", "value"])  # op: '<', '<=', '>', '>=', '=='
+Ratio = namedtuple("Ratio", ["column_numerator", "column_denominator", "op", "value"])
 Multiple = namedtuple("Multiple", ["criteria", "logical_operator"])
 
 
@@ -101,17 +103,16 @@ OPS = {
 
 DATABASE_CRITERIA = {
     "FLAG_STARTUP": [
+        # Check: if device was offline for > 1 hour, flag the following 4 hours
         Gap(gap_in_seconds=60 * 60, post_gap_flag_length_seconds=4 * 60 * 60),
-        # warmup_min_lipo_soc defaults to None here
     ],
     "FLAG_RHT": [
-        # any one of these individually out-of-range
+        # Check 1: any one of these individually out-of-range
         Range(column="sample_rh", lo=0.0, hi=100.0),
         Range(column="sample_temp", lo=-60.0, hi=85.0),
         Range(column="rh", lo=0.0, hi=100.0),
         Range(column="temp", lo=-60.0, hi=85.0),
-
-        # OR: both sample_rh and sample_temp are exactly 0.0
+        # Check 2: both sample_rh and sample_temp are exactly 0.0
         Multiple(
             criteria=(
                 Single(column="sample_rh", op="==", value=0.0),
@@ -119,8 +120,6 @@ DATABASE_CRITERIA = {
             ),
             logical_operator="AND",
             ),
-
-        # OR: both rh and temp are exactly 0.0 (AND)
         Multiple(
             criteria=(
                 Single(column="rh", op="==", value=0.0),
@@ -128,22 +127,147 @@ DATABASE_CRITERIA = {
             ),
             logical_operator="AND",
             ),
-
-        # QUESTION: do we need/want to flag when sample_temp/temp or sample_rh/rh are nan?
     ],
-    }
+    "FLAG_CO": [ 
+        # Check: ae out-of-range
+        Range(column="co_ae", lo=535.0, hi=800.0),
+    ],
+    "FLAG_NO": [
+        # Check: ae out-of-range
+        Range(column="no_ae", lo=640.0, hi=900.0),
+    ],
+    "FLAG_NO2": [
+        # Check: ae out-of-range
+        Range(column="no2_ae", lo=1600.0, hi=1700.0),
+    ],
+    "FLAG_O3": [
+        # Check: ae out-of-range
+        Range(column="o3_ae", lo=1600.0, hi=1700.0),
+    ],
+    "FLAG_OVERHEAT": [
+        # Check: device is power saving or overheating
+        # note: I'm not sure why the firmware includes power saving in FLAG_OVERHEAT
+        Single(column="dd_operating_state", op="==", value=1), # 0 = power saving
+        Single(column="dd_operating_state", op='==', value=2) # 2 = overheating
+    ],
+    # QUESTION: if FLAG_OPC was previously set by the firmware using other OPC criteria
+    # (see the 5 QC checks below in RAWSD_CRITERIA), I'm not sure we'd want to override that here?
+    # Isoprene did not re-flag FLAG_OPC and FLAG_NEPH.
+    "FLAG_OPC": [
+        # Check: ratio between the OPC and nephelometer is within spec
+        Multiple(
+            criteria=(
+                Single(column="bin0", op=">=", value=10.0),
+                Ratio(column_numerator="neph_bin0", 
+                      column_denominator="bin0",
+                      op=">", 
+                      value=2000.0),
+            ), logical_operator="AND",
+            ),
+    ],
+     "FLAG_NEPH": [
+        # Check 1: ensure that the neph isn't reading 0's when it shouldn't be
+        Multiple(
+            criteria=(
+                Single(column="bin0", op=">=", value=10.0),
+                Single(column="neph_bin0", op="==", value=0.0)
+            ),
+            logical_operator="AND",
+        ),
+        # Check 2: ratio between the OPC and nephelometer is within spec
+        Multiple(
+            criteria=(
+                Single(column="bin0", op=">=", value=10.0),
+                Ratio(column_numerator="neph_bin0", 
+                      column_denominator="bin0",
+                      op=">", 
+                      value=2000.0),
+            ), logical_operator="AND",
+        ),
+    ],
+}
 
 CLOUDAPI_CRITERIA = {
-    # flag criteria for cloudapi are the same as database
-    **DATABASE_CRITERIA, 
+    **DATABASE_CRITERIA,  # same as database except for schema differences below
+    "FLAG_CO": [ 
+        # Check: ae out-of-range
+        Range(column="gases.co.ae", lo=535.0, hi=800.0),
+    ],
+    "FLAG_NO": [
+        # Check: ae out-of-range
+        Range(column="gases.no.ae", lo=640.0, hi=900.0),
+    ],
+    "FLAG_NO2": [
+        # Check: ae out-of-range
+        Range(column="gases.no2.ae", lo=1600.0, hi=1700.0),
+    ],
+    "FLAG_O3": [
+        # Check: ae out-of-range
+        Range(column="gases.o3.ae", lo=1600.0, hi=1700.0),
+    ],
+    "FLAG_OPC": [
+        # Check: ratio between the OPC and nephelometer is within spec
+        Multiple(
+            criteria=(
+                Single(column="opc.bin0", op=">=", value=10.0),
+                Ratio(column_numerator="neph.bin0",
+                      column_denominator="opc.bin0",
+                      op=">",
+                      value=2000.0),
+            ), logical_operator="AND",
+            ),
+    ],
+     "FLAG_NEPH": [
+        # Check 1: ensure that the neph isn't reading 0's when it shouldn't be
+        Multiple(
+            criteria=(
+                Single(column="opc.bin0", op=">=", value=10.0),
+                Single(column="neph.bin0", op="==", value=0.0)
+            ),
+            logical_operator="AND",
+        ),
+        # Check 2: ratio between the OPC and nephelometer is within spec
+        Multiple(
+            criteria=(
+                Single(column="opc.bin0", op=">=", value=10.0),
+                Ratio(column_numerator="neph.bin0",
+                      column_denominator="opc.bin0",
+                      op=">",
+                      value=2000.0),
+            ), logical_operator="AND",
+        ),
+    ],
 }
 
 RAWSD_CRITERIA = {
-    **DATABASE_CRITERIA,
-    # flag criteria for rawsd are similar to database, except for FLAG_STARTUP and FLAG_OPC
+    **DATABASE_CRITERIA, # similar to database, except for FLAG_STARTUP and FLAG_OPC
     "FLAG_STARTUP": [
         Gap(gap_in_seconds=60 * 60, post_gap_flag_length_seconds=4 * 60 * 60, warmup_min_lipo_soc=0.1)
     ],
+    "FLAG_OPC": [
+        # Check 1: OPC is warming up or hibernating
+        Single(column="dd_measurement_state", op="==", value=0), # 0 = warmup
+        Single(column="dd_measurement_state", op='==', value=2), # 2 = hibernate
+        # Check 2: laser status out of range
+        Range(column="laser_status", lo=500.0, hi=650.0),
+        Range(column="opc_laser_status", lo=500.0, hi=650.0),
+        # Check 3: sample period of OPC excessively long
+        Single(column="opc_sample_period", op=">", value=10.0),
+        Single(column="sample_period", op=">", value=10.0),
+        # Check 4: sample flow of OPC in error
+        Single(column="opc_sample_flow", op="==", value=0.0),
+        Single(column="sample_flow", op="==", value=0.0),
+        # Check 5: ratio between the OPC and nephelometer is within spec
+        Multiple(
+            criteria=(
+                Single(column="bin0", op=">=", value=10.0),
+                Ratio(column_numerator="neph_bin0", 
+                      column_denominator="bin0",
+                      op=">", 
+                      value=2000.0),
+            ), logical_operator="AND",
+            ),
+    ]
 }
 
 FLAG_CRITERIA = {

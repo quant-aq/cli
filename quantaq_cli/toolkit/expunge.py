@@ -24,7 +24,7 @@ def expunge_dataframe(df):
 
     for label, value, cols in list_of_flags:
         mask = df["flag"] & value == value
-        if not mask.any():
+        if not mask.any() or cols is None:
             continue
 
         # NaN the necessary columns

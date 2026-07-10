@@ -230,7 +230,7 @@ def test_expunge_dataframe_expunges_rht():
 
 
 def test_expunge_dataframe_expunges_startup():
-    """Ensure expunge_dataframe expunges all columns correctly for FLAG_STARTUP."""
+    """Ensure expunge_dataframe expunges gas columns correctly for FLAG_STARTUP."""
     sample_df = pd.DataFrame(
         [
             {
@@ -258,12 +258,12 @@ def test_expunge_dataframe_expunges_startup():
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
                 "sn": "MOD-12345",
-                "rh": np.nan,
-                "temp": np.nan,
-                "pm1_env": np.nan,
-                "pm25_env": np.nan,
-                "pm10_env": np.nan,
-                "neph_bin0": np.nan,
+                "rh": 20000.,  # too high!
+                "temp": -10.4,
+                "pm1_env": 10.6,
+                "pm25_env": 25.0,
+                "pm10_env": 32.4,
+                "neph_bin0": 1590.375,
                 "co_we": np.nan,
                 "co_ae": np.nan,
                 "co_diff": np.nan,
@@ -303,9 +303,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": 64,
                 "FLAG_O3": 128,
                 "FLAG_OPC": 2,
-                "FLAG_RHTP": 8,
+                "FLAG_RHT": 8,
                 "FLAG_SO2": 512,
                 "FLAG_STARTUP": 1,
+                "FLAG_OVERHEAT": 4096,
             },
             "# OCCURENCES": {
                 "FLAG_BAT": 0,
@@ -317,9 +318,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": 1,
                 "FLAG_O3": 0,
                 "FLAG_OPC": 0,
-                "FLAG_RHTP": 0,
+                "FLAG_RHT": 0,
                 "FLAG_SO2": 0,
                 "FLAG_STARTUP": 2,
+                "FLAG_OVERHEAT": 0,
             },
             "% DATA": {
                 "FLAG_BAT": "0.0",
@@ -331,9 +333,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": "33.3",
                 "FLAG_O3": "0.0",
                 "FLAG_OPC": "0.0",
-                "FLAG_RHTP": "0.0",
+                "FLAG_RHT": "0.0",
                 "FLAG_SO2": "0.0",
                 "FLAG_STARTUP": "66.7",
+                "FLAG_OVERHEAT": "0.0",
             },
         },
     )

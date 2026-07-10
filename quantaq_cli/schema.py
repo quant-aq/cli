@@ -56,20 +56,23 @@ COLUMN_DEFINITIONS = [
     ('bin3MToF', np.float64),
     ('bin5MToF', np.float64),
     ('bin7MToF', np.float64),
-    ('sample_period', np.float64),
-    ('opc_sample_period', np.float64),
-    ('sample_flow', np.float64),
-    ('opc_sample_flow', np.float64),
     ('opc_temp', np.float64),
     ('opc_rh', np.float64),
     ('opc_pm1', np.float64),
     ('opc_pm25', np.float64),
     ('opc_pm10', np.float64),
     ('opcn3_pm1', np.float64),
-    ('opcn3_pm25', np.float64),
     ('opcn3_pm10', np.float64),
-    ('laser_status', np.int16),
-    ('opc_laser_status', np.int16),
+    ('opcn3_pm25', np.float64),
+    ('opc.pm1', np.float64),
+    ('opc.pm10', np.float64),
+    ('opc.pm25', np.float64),
+    ('sample_period', np.float64),
+    ('opc_sample_period', np.float64),
+    ('sample_flow', np.float64),
+    ('opc_sample_flow', np.float64),
+    ('laser_status', np.int64),
+    ('opc_laser_status', np.int64),
 
     # --- Nephelometer columns ---
     ('pm1_std', np.float64),
@@ -90,6 +93,10 @@ COLUMN_DEFINITIONS = [
     ('neph_bin3', np.float64),
     ('neph_bin4', np.float64),
     ('neph_bin5', np.float64),
+    ('neph.bin0', np.float64),
+    ('neph.pm1', np.float64),
+    ('neph.pm10', np.float64),
+    ('neph.pm25', np.float64), 
 
     # --- RH / Temp / Pressure columns ---
     ('sample_rh', np.float64),
@@ -159,10 +166,12 @@ COLUMN_DEFINITIONS = [
     ('vbat', np.float64),
 
     # --- Device / metadata columns ---
-    ('fw', np.int16),
+    ('fw', np.int64),
     ('flag', np.int64),
     ('connection_status', np.int16),
     ('iteration', np.int16),
+    ('dd_measurement_state', np.int64),
+    ('dd_operating_state', np.int64),
 ]
 
 def build_dtype_schema(column_definitions, nullable=True, required=False):

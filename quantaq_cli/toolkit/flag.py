@@ -6,7 +6,7 @@ import rich
 from rich.table import Table
 
 from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_VALUES
-from quantaq_cli.variables import Range, Gap, Single, Multiple, OPS, flag_name_to_criteria
+from quantaq_cli.variables import Range, Gap, Single, Multiple, Ratio, OPS, flag_name_to_criteria
 from quantaq_cli.utilities import fix_timestamps, determine_timestamp_column
 from quantaq_cli.utilities import infer_data_source, infer_data_model
 
@@ -33,6 +33,16 @@ def evaluate_criterion(df, criterion):
             return pd.Series(False, index=df.index)
         col = df[criterion.column]
         mask = OPS[criterion.op](col, criterion.value)
+        return mask
+    
+    elif isinstance(criterion, Ratio):
+        if (
+            criterion.column_denominator not in df.columns
+            or criterion.column_numerator not in df.columns
+        ):
+            return pd.Series(False, index=df.index)
+        ratio = df[criterion.column_numerator] / df[criterion.column_denominator]
+        mask = OPS[criterion.op](ratio, criterion.value)
         return mask
 
     elif isinstance(criterion, Gap):
@@ -92,9 +102,6 @@ def evaluate_criterion(df, criterion):
         logger.error(error)
         raise error
 
-      
-
-
 def add_flag(df, mask, flag_name, flag_value):
     """Set the 'flag' column to the flag bitmask value if the mask evaluates to true.
 
@@ -137,7 +144,7 @@ def flag_summary(df):
     df["flag"] = df["flag"].astype(int, errors='ignore')
 
     rows = []
-    for name, value, cols in FLAG_DEFINITIONS:
+    for name, value, _ in FLAG_DEFINITIONS:
         mask = df["flag"] & value
         num_naffected = mask.astype(bool).sum()
         percent_affected = f"{100 * num_naffected / df.shape[0]:.1f}"
