@@ -4,17 +4,17 @@ API Reference
 CLI
 ---
 
-.. click:: quantaq_tools.cli:main
-   :prog: quantaq-tools
+.. click:: quantaq_cli.cli:main
+   :prog: quantaq-cli
    :nested: full
 
-quantaq_tools.toolkit
+quantaq_cli.toolkit
 ----------------------
 
 concat
 ~~~~~~
 
-.. automodule:: quantaq_tools.toolkit.concat
+.. automodule:: quantaq_cli.toolkit.concat
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +22,7 @@ concat
 expunge
 ~~~~~~~
 
-.. automodule:: quantaq_tools.toolkit.expunge
+.. automodule:: quantaq_cli.toolkit.expunge
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ expunge
 flag
 ~~~~
 
-.. automodule:: quantaq_tools.toolkit.flag
+.. automodule:: quantaq_cli.toolkit.flag
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ flag
 merge
 ~~~~~
 
-.. automodule:: quantaq_tools.toolkit.merge
+.. automodule:: quantaq_cli.toolkit.merge
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ merge
 munge
 ~~~~~
 
-.. automodule:: quantaq_tools.toolkit.munge
+.. automodule:: quantaq_cli.toolkit.munge
    :members:
    :undoc-members:
    :show-inheritance:
@@ -54,7 +54,7 @@ munge
 resample
 ~~~~~~~~
 
-.. automodule:: quantaq_tools.toolkit.resample
+.. automodule:: quantaq_cli.toolkit.resample
    :members:
    :undoc-members:
    :show-inheritance:
