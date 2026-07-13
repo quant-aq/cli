@@ -141,6 +141,8 @@ class SetupTestCase(unittest.TestCase):
                         "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
                         "10min",
+                        "--nonnumeric_how",
+                        "last"
                     ], catch_exceptions=False
                 )
         
