@@ -9,7 +9,7 @@ from quantaq_cli import flag_dataframe, echo_flag_table, expunge_dataframe
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.log import configure_logging, LOG_LEVELS
 from quantaq_cli.toolkit.resample import WIND_COLUMNS
-from quantaq_cli.utilities import safe_load
+from quantaq_cli.toolkit.load import safe_load
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])

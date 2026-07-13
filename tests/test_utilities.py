@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from quantaq_cli.utilities import safe_load
+from quantaq_cli.toolkit.load import safe_load
 from quantaq_cli.utilities import sn_to_model, infer_data_model, infer_data_source
 
 class SetupTestCase(unittest.TestCase):
@@ -74,7 +74,7 @@ class SetupTestCase(unittest.TestCase):
         cases = [
             (df1, "rawsd"),
             (df2, "database"),
-            (df3, "cloudapi"),
+            (df3, "database"),
             (df4, "database"),
             (df5, "rawsd"),
             (df6, "rawsd"),

@@ -13,6 +13,7 @@ from pandas.testing import assert_frame_equal
 from quantaq_cli import expunge_dataframe, flag_summary
 from quantaq_cli.cli import expunge_command
 
+
 class SetupTestCase(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()

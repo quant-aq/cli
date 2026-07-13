@@ -1,7 +1,9 @@
 from loguru import logger
 import pandas as pd
 
-from quantaq_cli.utilities import safe_load, fix_timestamps
+from quantaq_cli.toolkit.load import safe_load
+from quantaq_cli.utilities import fix_timestamps
+
 
 def concat_files(files):
     """Concatenate multiple files into a single DataFrame and sort based on a 

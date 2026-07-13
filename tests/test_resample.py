@@ -12,7 +12,8 @@ from loguru import logger
 
 from quantaq_cli.toolkit.resample import resample_dataframe
 from quantaq_cli.cli import resample_command
-from quantaq_cli.utilities import safe_load
+from quantaq_cli.toolkit.load import safe_load
+
 
 
 class SetupTestCase(unittest.TestCase):

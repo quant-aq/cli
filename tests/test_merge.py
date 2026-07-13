@@ -9,7 +9,8 @@ from click.testing import CliRunner
 import pandas as pd
 
 from quantaq_cli.cli import concat_command, merge_command
-from quantaq_cli.utilities import safe_load
+from quantaq_cli.toolkit.load import safe_load
+
 
 
 class SetupTestCase(unittest.TestCase):

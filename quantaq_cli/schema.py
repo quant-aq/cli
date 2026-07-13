@@ -1,86 +1,49 @@
+import contextlib
+
 import numpy as np
 import pandera.pandas as pa
 
 # Default dtypes from database / cloudAPI data
 COLUMN_DEFINITIONS = [
     # --- OPC colunms ---
-    ('bin0', np.float64),
-    ('bin1', np.float64),
-    ('bin2', np.float64),
-    ('bin3', np.float64),
-    ('bin4', np.float64),
-    ('bin5', np.float64),
-    ('bin6', np.float64),
-    ('bin7', np.float64),
-    ('bin8', np.float64),
-    ('bin9', np.float64),
-    ('bin10', np.float64),
-    ('bin11', np.float64),
-    ('bin12', np.float64),
-    ('bin13', np.float64),
-    ('bin14', np.float64),
-    ('bin15', np.float64),
-    ('bin16', np.float64),
-    ('bin17', np.float64),
-    ('bin18', np.float64),
-    ('bin19', np.float64),
-    ('bin20', np.float64),
-    ('bin21', np.float64),
-    ('bin22', np.float64),
-    ('bin23', np.float64),
-    ('opc.bin0', np.float64),
-    ('opc.bin1', np.float64),
-    ('opc.bin2', np.float64),
-    ('opc.bin3', np.float64),
-    ('opc.bin4', np.float64),
-    ('opc.bin5', np.float64),
-    ('opc.bin6', np.float64),
-    ('opc.bin7', np.float64),
-    ('opc.bin8', np.float64),
-    ('opc.bin9', np.float64),
-    ('opc.bin10', np.float64),
-    ('opc.bin11', np.float64),
-    ('opc.bin12', np.float64),
-    ('opc.bin13', np.float64),
-    ('opc.bin14', np.float64),
-    ('opc.bin15', np.float64),
-    ('opc.bin16', np.float64),
-    ('opc.bin17', np.float64),
-    ('opc.bin18', np.float64),
-    ('opc.bin19', np.float64),
-    ('opc.bin20', np.float64),
-    ('opc.bin21', np.float64),
-    ('opc.bin22', np.float64),
-    ('opc.bin23', np.float64),
-    ('bin1MToF', np.float64),
-    ('bin3MToF', np.float64),
-    ('bin5MToF', np.float64),
-    ('bin7MToF', np.float64),
+    ('opc_bin0', np.float64),
+    ('opc_bin1', np.float64),
+    ('opc_bin2', np.float64),
+    ('opc_bin3', np.float64),
+    ('opc_bin4', np.float64),
+    ('opc_bin5', np.float64),
+    ('opc_bin6', np.float64),
+    ('opc_bin7', np.float64),
+    ('opc_bin8', np.float64),
+    ('opc_bin9', np.float64),
+    ('opc_bin10', np.float64),
+    ('opc_bin11', np.float64),
+    ('opc_bin12', np.float64),
+    ('opc_bin13', np.float64),
+    ('opc_bin14', np.float64),
+    ('opc_bin15', np.float64),
+    ('opc_bin16', np.float64),
+    ('opc_bin17', np.float64),
+    ('opc_bin18', np.float64),
+    ('opc_bin19', np.float64),
+    ('opc_bin20', np.float64),
+    ('opc_bin21', np.float64),
+    ('opc_bin22', np.float64),
+    ('opc_bin23', np.float64),
+    ('opc_bin1MToF', np.float64),
+    ('opc_bin3MToF', np.float64),
+    ('opc_bin5MToF', np.float64),
+    ('opc_bin7MToF', np.float64),
     ('opc_temp', np.float64),
     ('opc_rh', np.float64),
     ('opc_pm1', np.float64),
     ('opc_pm25', np.float64),
     ('opc_pm10', np.float64),
-    ('opcn3_pm1', np.float64),
-    ('opcn3_pm10', np.float64),
-    ('opcn3_pm25', np.float64),
-    ('opc.pm1', np.float64),
-    ('opc.pm10', np.float64),
-    ('opc.pm25', np.float64),
-    ('sample_period', np.float64),
     ('opc_sample_period', np.float64),
-    ('sample_flow', np.float64),
     ('opc_sample_flow', np.float64),
-    ('laser_status', np.int64),
     ('opc_laser_status', np.int64),
 
     # --- Nephelometer columns ---
-    ('pm1_std', np.float64),
-    ('pm25_std', np.float64),
-    ('pm10_std', np.float64),
-    ('pm1_env', np.float64),
-    ('pm25_env', np.float64),
-    ('pm10_env', np.float64),
     ('neph_pm1_std', np.float64),
     ('neph_pm25_std', np.float64),
     ('neph_pm10_std', np.float64),
@@ -93,56 +56,35 @@ COLUMN_DEFINITIONS = [
     ('neph_bin3', np.float64),
     ('neph_bin4', np.float64),
     ('neph_bin5', np.float64),
-    ('neph.bin0', np.float64),
-    ('neph.pm1', np.float64),
-    ('neph.pm10', np.float64),
-    ('neph.pm25', np.float64), 
 
     # --- RH / Temp / Pressure columns ---
     ('sample_rh', np.float64),
     ('sample_temp', np.float64),
     ('sample_pres', np.float64),
-    ('rh', np.float64),
-    ('temp', np.float64),
 
     # --- CO columns ---
     ('co', np.float64),
     ('co_we', np.float64),
     ('co_ae', np.float64),
     ('co_diff', np.float64),
-    ('gases.co.we', np.float64),
-    ('gases.co.ae', np.float64),
-    ('gases.co.diff', np.float64),
 
     # --- NO columns ---
     ('no', np.float64),
     ('no_we', np.float64),
     ('no_ae', np.float64),
     ('no_diff', np.float64),
-    ('gases.no.we', np.float64),
-    ('gases.no.ae', np.float64),
-    ('gases.no.diff', np.float64),
 
     # --- NO2 columns ---
     ('no2', np.float64),
     ('no2_we', np.float64),
     ('no2_ae', np.float64),
     ('no2_diff', np.float64),
-    ('gases.no2.we', np.float64),
-    ('gases.no2.ae', np.float64),
-    ('gases.no2.diff', np.float64),
 
     # --- O3 columns ---
     ('o3', np.float64),
-    ('ox_we', np.float64),
-    ('ox_ae', np.float64),
     ('ox_diff', np.float64),
     ('o3_we', np.float64),
     ('o3_ae', np.float64),
-    ('o3_diff', np.float64),
-    ('gases.o3.we', np.float64),
-    ('gases.o3.ae', np.float64),
-    ('gases.o3.diff', np.float64),
 
     # --- CO2 columns ---
     ('co2_raw', np.float64),
@@ -197,3 +139,86 @@ def build_dtype_schema(column_definitions, nullable=True, required=False):
     # strict = False allows missing and extra columns in the DataFrame
     schema = pa.DataFrameSchema(columns, index=None, strict=False)
     return schema
+
+def standardize_columns(df):
+    """Standardize column names.
+
+    Note that this doesn't remove any columns, it simply adds diff columns if 
+    they don't exist and standardizes naming.
+
+    Args:
+        df (pd.DataFrame): the dataframe to be standardized
+    """
+
+    df = df.copy()
+
+    column_renames = {
+        # --- OPC colunms --- 
+        "opc.pm1": "opc_pm1",
+        "opc.pm25": "opc_pm25",
+        "opc.pm10": "opc_pm10",
+        "opcn3_pm1": "opc_pm1",
+        "opcn3_pm25": "opc_pm25",
+        "opcn3_pm10": "opc_pm10",
+        "sample_period": "opc_sample_period",
+        "sample_flow": "opc_sample_flow",
+        "laser_status": "opc_laser_status",
+
+        # --- Nephelometer columns ---
+        "neph.bin0": "neph_bin0",  # MODULAIR-PM's name
+        "neph.cscat": "neph_bin0",  # MODULAIR's name
+        "neph.pm1": "neph_pm1_env",
+        "neph.pm25": "neph_pm25_env",
+        "neph.pm10": "neph_pm10_env",
+        "pm1_env": "neph_pm1_env",
+        "pm25_env": "neph_pm25_env",
+        "pm10_env": "neph_pm10_env",
+        "pm1_std": "neph_pm1_std",
+        "pm25_std": "neph_pm25_std",
+        "pm10_std": "neph_pm10_std",
+
+        # --- O3 columns ---
+        "o3_diff": "ox_diff", 
+        "ox_we": "o3_we",
+        "ox_ae": "o3_ae",
+
+        
+        # --- Device / metadata columns ---
+        "temp": "sample_temp",
+        "rh": "sample_rh",
+    }
+
+    # bin0 --> opc_bin0, etc..
+    for column in df.columns:
+        if column.startswith("bin"):  # opc_bin0, opc_bin23
+            column_renames[column] = column.replace("bin", "opc_bin")
+
+    # Add diff columns (we minus ae) if they don't already exist
+    if not any('diff' in col for col in df.columns):
+        for pollutant in ("co", "no", "no2"):
+            with contextlib.suppress(KeyError):
+                df[f"{pollutant}_diff"] = (
+                    df[f"{pollutant}_we"] - df[f"{pollutant}_ae"]
+            )
+        with contextlib.suppress(KeyError):
+            df["ox_diff"] = df["ox_we"] - df["no2_we"]
+            df["ox_diff"] = df["o3_we"] - df["no2_we"]
+
+    # CloudAPI schema to database schema
+    for column in df.columns:
+        if column.startswith("opc.bin"):  # opc_bin0, opc_bin23
+            column_renames[column] = column.replace(".", "_")
+        elif column.startswith("met."):
+            column_renames[column] = column.replace("met.", "")
+        elif column.startswith("gases."):
+            if column != 'gases.o3.diff':
+                new_column = column.removeprefix("gases.").replace(".", "_")
+            else:
+                new_column = 'ox_diff'
+            column_renames[column] = new_column
+        elif column.startswith("geo."): 
+            column_renames[column] = column.removeprefix("geo.")
+
+    df = df.rename(columns=column_renames)
+
+    return df
