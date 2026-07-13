@@ -1,18 +1,104 @@
 .. highlight:: sh
 
 Usage 
-=====
+#####
 
 The primary purpose of the *quantaq-cli* is to make it easier for you - the user - to munge and analyze 
-your sensor data. A quick overview of the available functions are below, with more detailed documentation 
+your sensor data. A quick overview of the available functions and commands are below, with more detailed documentation 
 on their complete functionality in the :doc:`api`.
 
-* **concat** enables you to concatenate large groups of files together into one
-* **merge** allows you to combine a number of files together based on their timestamp
-* **resample** helps you up- or down-sample your data
-* **expunge** sets all flagged data to NaN's 
-* **flag** allows you to drop rows based on specific criteria
-* **clean** allows you to remove corrupt data and force columns to their proper data type
+Using quantaq-cli in a Python script
+------------------------------------
+
+The following functions can be imported directly from the *quantaq_cli* library:
+
+
+* **safe_load** reads CSV or Parquet files into a pandas DataFrame, handling
+  the various QuantAQ sensor header formats automatically.
+
+  .. code-block:: python 
+
+    from quantaq_cli import safe_load
+    df = safe_load('/PATH/TO/FILE.CSV')
+
+* **concat_files** enables you to concatenate large groups of files row-wise into
+  one DataFrame, aligning columns by label.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import concat_files
+    df = concat_files(['/PATH/TO/FILE1.CSV', 
+                        '/PATH/TO/FILE2.CSV',
+                        '/PATH/TO/FILE3.CSV'])
+
+* **merge_files** enables you to merge two files column-wise into one DataFrame,
+  aligning rows by timestamp. 
+
+  .. code-block:: python 
+    
+    from quantaq_cli import merge_files
+
+    # for files with duplicate column names, keep both, disambiguated by suffix
+    df = concat_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'], 
+                        tscol="timestamp", 
+                        suffixes=('_left', '_right'), 
+                        keep="both")
+
+    # for files with duplicate column names, keep only the left file's version
+    df = concat_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'], 
+                        tscol="timestamp", 
+                        suffixes=('', '_drop')
+                        keep="left")
+
+* **flag_dataframe** flags rows that do not meet QuantAQ's default
+  QA/QC checks.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import flag_dataframe
+    df_new = flag_dataframe(df)
+
+* **echo_flag_table** allows you to view a summary of the flag statistics for 
+  a DataFrame.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import echo_flag_table
+    echo_flag_table(df)
+  .. image:: flag-output2.png
+
+* **resample_dataframe** helps you up- or down-sample your data, with safe
+  handling of mixed dtypes, wind columns, and flag columns.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import resample_dataframe
+
+    # rows are resampled regardless of flags in the 'flag' column
+    df_hourly = resample_dataframe(df, "1h")
+
+    # flag-aware resampling (see API Reference)
+    df_hourly = resample_dataframe(df, "1h", flag_aware=True)
+
+* **expunge_dataframe** sets the appropriate columns to NaN for rows with 
+  flagged data.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import expunge_dataframe
+    df_new = expunge_dataframe(df)
+
+* **clean_dataframe** drops rows where all columns are NaN.
+
+  .. code-block:: python 
+    
+    from quantaq_cli import clean_dataframe
+    df_new = clean_dataframe(df)
+
+Using the command-line interface
+--------------------------------
+
+
 
 
 Overview of Available Commands
