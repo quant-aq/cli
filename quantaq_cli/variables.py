@@ -188,58 +188,6 @@ DATABASE_CRITERIA = {
     ],
 }
 
-CLOUDAPI_CRITERIA = {
-    **DATABASE_CRITERIA,  # same as database except for schema differences below
-    "FLAG_CO": [ 
-        # Check: ae out-of-range
-        Range(column="gases.co.ae", lo=535.0, hi=800.0),
-    ],
-    "FLAG_NO": [
-        # Check: ae out-of-range
-        Range(column="gases.no.ae", lo=640.0, hi=900.0),
-    ],
-    "FLAG_NO2": [
-        # Check: ae out-of-range
-        Range(column="gases.no2.ae", lo=1600.0, hi=1700.0),
-    ],
-    "FLAG_O3": [
-        # Check: ae out-of-range
-        Range(column="gases.o3.ae", lo=1600.0, hi=1700.0),
-    ],
-    "FLAG_OPC": [
-        # Check: ratio between the OPC and nephelometer is within spec
-        Multiple(
-            criteria=(
-                Single(column="opc.bin0", op=">=", value=10.0),
-                Ratio(column_numerator="neph.bin0",
-                      column_denominator="opc.bin0",
-                      op=">",
-                      value=2000.0),
-            ), logical_operator="AND",
-            ),
-    ],
-     "FLAG_NEPH": [
-        # Check 1: ensure that the neph isn't reading 0's when it shouldn't be
-        Multiple(
-            criteria=(
-                Single(column="opc.bin0", op=">=", value=10.0),
-                Single(column="neph.bin0", op="==", value=0.0)
-            ),
-            logical_operator="AND",
-        ),
-        # Check 2: ratio between the OPC and nephelometer is within spec
-        Multiple(
-            criteria=(
-                Single(column="opc.bin0", op=">=", value=10.0),
-                Ratio(column_numerator="neph.bin0",
-                      column_denominator="opc.bin0",
-                      op=">",
-                      value=2000.0),
-            ), logical_operator="AND",
-        ),
-    ],
-}
-
 RAWSD_CRITERIA = {
     **DATABASE_CRITERIA, # similar to database, except for FLAG_STARTUP and FLAG_OPC
     "FLAG_STARTUP": [
@@ -273,7 +221,6 @@ RAWSD_CRITERIA = {
 
 FLAG_CRITERIA = {
     "database": DATABASE_CRITERIA,
-    "cloudapi": CLOUDAPI_CRITERIA,
     "rawsd": RAWSD_CRITERIA
 }
 
