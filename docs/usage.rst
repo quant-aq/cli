@@ -14,12 +14,16 @@ The following functions can be imported directly from the *quantaq_cli* library:
 
 
 * **safe_load** reads CSV or Parquet files into a pandas DataFrame, handling
-  the various QuantAQ sensor header formats automatically.
+  the various QuantAQ sensor header formats and schema types automatically.
 
   .. code-block:: python 
 
     from quantaq_cli import safe_load
+
     df = safe_load('/PATH/TO/FILE.CSV')
+
+    # we can optionally choose not to standardize the schema
+    df = safe_load('/PATH/TO/FILE.CSV', standardize_schema=False)
 
 * **concat_files** enables you to concatenate large groups of files row-wise into
   one DataFrame, aligning columns by label.
@@ -27,6 +31,7 @@ The following functions can be imported directly from the *quantaq_cli* library:
   .. code-block:: python 
     
     from quantaq_cli import concat_files
+
     df = concat_files(['/PATH/TO/FILE1.CSV', 
                         '/PATH/TO/FILE2.CSV',
                         '/PATH/TO/FILE3.CSV'])
@@ -38,17 +43,20 @@ The following functions can be imported directly from the *quantaq_cli* library:
     
     from quantaq_cli import merge_files
 
-    # for files with duplicate column names, keep both, disambiguated by suffix
-    df = concat_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'], 
-                        tscol="timestamp", 
-                        suffixes=('_left', '_right'), 
-                        keep="both")
+    df = merge_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'])
 
-    # for files with duplicate column names, keep only the left file's version
-    df = concat_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'], 
-                        tscol="timestamp", 
-                        suffixes=('', '_drop')
-                        keep="left")
+    # you can override the name of the timestamp column, the suffixes attached to
+    # duplicated column names, and whether to keep both duplicated columns or
+    # only the left/right file's version
+    df = merge_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'],
+                      tscol="timestamp",
+                      suffixes=('_left', '_right'),
+                      keep="both")
+
+    df = merge_files(['/PATH/TO/FILE1.CSV', '/PATH/TO/FILE2.CSV'],
+                      tscol="timestamp",
+                      suffixes=('', '_drop'),
+                      keep="left")
 
 * **flag_dataframe** flags rows that do not meet QuantAQ's default
   QA/QC checks.
@@ -56,6 +64,7 @@ The following functions can be imported directly from the *quantaq_cli* library:
   .. code-block:: python 
     
     from quantaq_cli import flag_dataframe
+
     df_new = flag_dataframe(df)
 
 * **echo_flag_table** allows you to view a summary of the flag statistics for 
@@ -64,7 +73,9 @@ The following functions can be imported directly from the *quantaq_cli* library:
   .. code-block:: python 
     
     from quantaq_cli import echo_flag_table
+
     echo_flag_table(df)
+
   .. image:: flag-output2.png
 
 * **resample_dataframe** helps you up- or down-sample your data, with safe
@@ -74,203 +85,132 @@ The following functions can be imported directly from the *quantaq_cli* library:
     
     from quantaq_cli import resample_dataframe
 
-    # rows are resampled regardless of flags in the 'flag' column
+    # the only required arguments are the dataframe you'd like to flag and the 
+    # target resampling rule (i.e. "1min", "1h", "1D")
     df_hourly = resample_dataframe(df, "1h")
 
-    # flag-aware resampling (see API Reference)
+    # we can optionally implement flag-aware resampling (see API Reference)
     df_hourly = resample_dataframe(df, "1h", flag_aware=True)
 
+    # you can also override the name of the timestamp column to resample on, 
+    # the column(s) to group by first (i.e. ``sn`` so that unique devices are 
+    # resampled independently, the names of the wind columns, and the aggregate
+    # methods used for numeric and non-numeric columns.
+    df_daily = resample_dataframe(
+        df,
+        "1D",
+        on="timestamp",
+        by="sn",
+        wind=("wx_u", "wx_v", "wx_ws", "wx_wd"),
+        flag_aware=True,
+        numeric_how="mean",
+        nonnumeric_how="first",
+    )
+
 * **expunge_dataframe** sets the appropriate columns to NaN for rows with 
-  flagged data.
+  flagged data. This means that the columns associated with a given flag 
+  are set to NaN's whenever that flag is set. For more information on the sensor-specific 
+  flags, please check out your sensors documentation. 
 
   .. code-block:: python 
     
     from quantaq_cli import expunge_dataframe
     df_new = expunge_dataframe(df)
 
-* **clean_dataframe** drops rows where all columns are NaN.
+* **clean_dataframe** converts timestamps to sorted, timezone-aware datetime objects;
+  standardizes the schema and optionally coerces dtypes; drop rows where are columns
+  are NaN; removes unnamed columns. 
 
   .. code-block:: python 
     
     from quantaq_cli import clean_dataframe
     df_new = clean_dataframe(df)
 
+
 Using the command-line interface
 --------------------------------
 
+* To use the **concat** command, you must provide either a list of files or a 
+  wildcard argument that will glob all the files together.
+ 
+  Below is an example of a wildcard argument that will grab all files in the directory that begin with **data** and 
+  are **.csv**'s. We would expect this command to concatenate all of those files and output them to **path/output.csv**.
 
-
-
-Overview of Available Commands
-------------------------------
-
-Concatenate Files
-^^^^^^^^^^^^^^^^^
-
-The purpose of this command is to take a bunch of files of the same type and concatenate them together. To use, you 
-must provide either a list of files or a wildcard argument that will glob all of the files together. **FILES** is 
-the only required argument, as can be seen in the :doc:`api`.
-
-Below is an example of a wildcard argument that will grab all files in the directory that begin with **data** and 
-are **.csv**'s. We would expect this command to concatenate all of those files and output them to **path/output.csv**.
-Additionally, the verbosity flag has been set (**-v**) which will print out additional debugging information to 
-the console.
+  Additionally, the log level has been set to *DEBUG* which will log additional debugging information to 
+  the console.
 
 .. code-block:: bash
 
-    $ quantaq-cli concat -v -o path/output.csv path/data*.csv
+    $ quantaq-cli concat --log-level DEBUG -o path/output.csv path/data*.csv
 
 If you wanted to explicitly define the individual files to concatenate, you can do that as well:
 
 .. code-block:: bash
 
-    $ quantaq-cli concat -v path/file-1.csv path/file-2.csv
+    $ quantaq-cli concat path/file-1.csv path/file-2.csv
 
 This time, we didn't define the output path (**-o**), so the default will be used which will save the file 
-to your current working directory.
-
-Additionally, there is support for concatenating files from the on-board µSD card log files which are 
-fairly hard-to-parse txt files with a ton of embedded information. By adding the **-l, --logs** flag, you 
-can easily convert the entire directory to a single csv file that is usable and makes sense!
-
-.. code-block:: bash 
-
-    $ quantaq-cli concat -v -l -o final-logs.csv path/to/logs/*.txt
-    
+to your current working directory.    
 
 .. warning::
 
     Arguments must come at the **end** of the command. For this CLI, this usually means the filepath for the
     files being read in. However, you can always check the :doc:`api` for complete documentation.
 
+* The **merge** command can, for example, be used to combine **raw** and **final** data files 
+  (or sensor data and reference station data) column-wise based on their timestamp. 
 
-Merge Files
-^^^^^^^^^^^
+  .. code-block:: bash
 
-Often times, there is a need to merge two (or more) files on their timestamp. For 
-example, if we have **raw** and **final** data files (or sensor data and reference station 
-data), we need to merge them into a single file to make analysis easier. We can 
-leverage the **merge** command to easily accomplish this. The only required argument 
-is the file(s) to merge together. Additionally, you can override the name of the 
-timestamp column (**-ts, --tscol**) as well as define the output file destination 
-(**-o, --output**).
+        $ quantaq-cli merge path/data_raw.csv path/data_final.csv
 
-To merge together two files with the default timestamp column and output destination:
+  If we want to override the name of the timestamp column to one named *timestamp_local*:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-    $ quantaq-cli merge -v path/file-1.csv path/file-2.csv
+        $ quantaq-cli merge --tscol timestamp_local path/data_sensor.csv path/data_reference.csv
 
-If we want to go ahead and override the timestamp column to one named **tstamp**:
+  If we only want to keep overlapping columns from the sensor data:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-    $ quantaq-cli merge -v -ts tstamp path/file-1.csv path/file-2.csv
-
-
-If we want to override the output file destination:
-
-.. code-block:: bash
-
-    $ quantaq-cli merge -v -o dest-path/final-file.csv path/file-1.csv path/file-2.csv
-
+        $ quantaq-cli merge --suffixes "" _drop --keep left path/data_sensor.csv path/data_reference.csv
 
 .. warning::
 
     The timestamp column name must be the same in all files.
 
+* The **flag** command will override the flags in the `flag` column and re-flag 
+  data based on QuantAQ's most recent (as of July 2026) QA/QC checks.
 
-Flag Data 
-^^^^^^^^^^
+  .. code-block:: bash
 
-While all raw data files contain a **flag** column, the **flag** command provides 
-an easy way to set additional flags. This method **WILL NOT** remove the data, but 
-it will set a flag that can be removed with the **expunge** command detailed below. 
-There are four required arguments: the file path, the column name, the comparator, 
-and the value. Additionally, you can set the device model using the **model** keyword 
-argument. The goal is to make it easy to flag all data that falls outside 
-some threshold range based on your domain knowledge and intuition. The column 
-must be named identically to a column in the file otherwise an exception will be raised. 
+        $ quantaq-cli flag path/data.csv
 
-The comparators that can be chosen/used are:
+* The **resample** command only requires the file path and the target resampling 
+  rule (i.e. "1min", "1h", "1D")
 
-* **lt** : less than ( < )
-* **le** : less than or equal to ( <= )
-* **eq** : equals ( == )
-* **gt** : greater than ( > )
-* **ge** : greater than or equal to ( >= )
+  .. code-block:: bash
 
-In addition to the required arguments, there are a few optional arguments that 
-can be used inlcuding the **verbosity** (-v, --verbosity) and **output** (-o, --output) 
-flags prevelant throughout this library. Last is the **flag** (-f, --flag) option. 
-The **flag** option allows you to set the flag that is used where the default is the 
-**FLAG_ROW** flag which will NaN the entire row of data. Flags are specific to each sensor 
-and you should look up the options for your sensor in the sensors documentation. However, 
-there are several flags that can be used and are (as of June 2020) the same for 
-all sensors:
+        $ quantaq-cli resample path/data.csv 1h
 
-* **FLAG_OPC** will NaN all particle data
-* **FLAG_CO** will NaN all CO data
-* **FLAG_CO2** will NaN all CO2 data
-* **FLAG_NO** will NaN all NO data
-* **FLAG_NO2** will NaN all NO2 data
-* **FLAG_O3** will NaN all O3 data
-* **FLAG_NEPH** will NaN all nephelometer data (MODULAIR-PM only)
-* **FLAG_RHTP** will NaN all relative humidity, temp., and pressure data (MODULAIR-PM only)
+  If we want to override the name of the timestamp column to one named *timestamp_local*:
 
-Examples:
+  .. code-block:: bash
 
-If we want to flag all rows where the **co_ae** column is less than 500 mV:
+        $ quantaq-cli resample --on timestamp_local path/data.csv 1h 
+    
+  If we want to implement flag-aware resampling:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-    $ quantaq-cli flag -v file-1.csv co_ae lt 500
+        $ quantaq-cli resample --flag-aware path/data.csv 1h
 
-If we want to eliminate only the CO data with the same conditions, we would need to 
-just change the flag we want to use:
-
-.. code-block:: bash
-
-    $ quantaq-cli flag -v -f FLAG_CO file-1.csv co_ae lt 500
+See the :doc:`api` for how to override other default resampling options.
 
 
-It is quite possible that you will want to use multiple filters but only save 
-one file. The **flag** command only allows one set of commands at a time for now, 
-but you can easily accomplish this by using the previous output file path as the input 
-to the second command. Here, we filter out the entire row where **co_ae** is either 
-less than 500 mV or greater than 3300 mV:
-
-.. code-block:: bash
-
-    $ quantaq-cli flag -v -o output.csv file-1.csv co_ae lt 500
-    $ quantaq-cli flag -v -o final.csv output.csv co_ae gt 3300
-
-
-Using this approach, complex workflows can be built.
-
-.. note:: 
-
-    There are plans to support various statistical methods for flagging outliers. 
-    If you have recomendations or thoughts, please add an issue to the GitHub repository.
-
-
-Expunge Data
-^^^^^^^^^^^^
-
-All raw data files have a **flag** column that contains a single integer with several 
-flag values combined as a bitmask. To clean this data, we use the **expunge** command. 
-When we say *clean*, what we mean is that the columns associated with a given flag 
-are set to NaN's whenever that flag is set. For more information on the sensor-specific 
-flags, please check out your sensors documentation. 
-
-There are a few additional options available for this command including **-d, --dry-run** 
-which will generate the flag report and print it out to the terminal screen 
-without saving the final data file, as well as the same **-o, --output** flag 
-to define the output file path as in other commands. The model of the device you 
-are trying to flag can be set with the **-m, --model** flag where the available 
-options are [**v100**, **v200**, and **modulair_pm**]. Last, if you are using 
-your own files and have renamed the **flag** column, you can overrride the 
-name of that column with the **-f, --flag** option.
+###############################################################################
+## to do: modify docs after this point ########################################
 
 If you running with the verbose flag set (**-v, --verbose**) or with the dry-run 
 (**-d, --dry-run**) flag set, a table with the flag report will be output to the 
