@@ -183,6 +183,47 @@ class SetupTestCase(unittest.TestCase):
         # don't assert_default_merge_columns_valid because keep=left
         self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
 
+    def test_merge_files_modulair_db_parquet_customsuffix(self):
+        runner = CliRunner()
+        result = runner.invoke(merge_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.parquet"),
+                        "--log-level",
+                        "DEBUG",
+                        "--keep",
+                        "both",
+                        "--suffixes",
+                        "_sen",
+                        "--suffixes",
+                        "_ref",
+                        os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"), 
+                        os.path.join(self.test_files_dir, "modulair/ref/bos_roxbury-cleaned.parquet"),
+                    ],
+                    catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.parquet")
+        self.assertTrue(p.exists())
+        
+        # is it a parquet?
+        self.assertEqual(p.suffix, ".parquet")
+
+        # are the number of lines correct?
+        df1 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
+        df2 = safe_load(os.path.join(self.test_files_dir, "modulair/ref/bos_roxbury-cleaned.parquet"))
+        df3 = safe_load(os.path.join(self.test_dir, "output.parquet"), validate_dataframe_schema=False)
+        
+        # don't assert_default_merge_columns_valid because of custom suffixes
+        self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+
     #def test_concat_then_merge(self):
     #    runner = CliRunner()
     #    res1 = runner.invoke(concat_command,
