@@ -5,7 +5,7 @@ from loguru import logger
 
 
 # loguru levels, ordered low -> high
-LOG_LEVELS = ["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
+LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
 
 class _InterceptHandler(logging.Handler):
     """Route standard logging calls through loguru."""
