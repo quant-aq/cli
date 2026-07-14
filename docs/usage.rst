@@ -221,7 +221,7 @@ If you wanted to explicitly define the individual files to concatenate, you can 
 
     $ quantaq-cli concat path/file-1.csv path/file-2.csv
 
-For each command, you can specify the output path using the :option:`-o, --output` option. 
+For each command, you can specify the output path using the ``-o``/``--output`` option. 
 Otherwise, the default will be used which will save the file to your current
 working directory.
 
@@ -230,13 +230,13 @@ working directory.
       $ quantaq-cli concat -o path/output.csv path/data*.csv
 
 For each command, you can also specify the log level to control the verbosity of log output
-using :option:`--log-level`:
+using ``--log-level``:
 
     .. code-block:: bash
 
       $ quantaq-cli concat --log-level DEBUG path/data*.csv
 
-Accepted values for :option:`--log-level` are:
+Accepted values for ``--log-level`` are:
 ``DEBUG``, ``INFO``, ``WARNING``, and ``ERROR``. The default is ``INFO``. 
 
   .. warning::
@@ -256,7 +256,7 @@ merge
       $ quantaq-cli merge path/data_raw.csv path/data_final.csv
 
   If we want to override the name of the timestamp column to merge on to one named *timestamp_local*
-  use :option:`--tscol`:
+  use ``--tscol``:
 
     .. code-block:: bash
 
@@ -302,13 +302,13 @@ resample
       $ quantaq-cli resample path/data.csv 1h
 
   If we want to override the name of the timestamp column to resample on to one
-  named *timestamp_local* use :option:`--on`:
+  named *timestamp_local* use ``--on``:
 
   .. code-block:: bash
 
       $ quantaq-cli resample --on timestamp_local path/data.csv 1h 
     
-  If you want to implement flag-aware resampling, simply use the :option:`--flag-aware` flag:
+  If you want to implement flag-aware resampling, simply use the ``--flag-aware`` flag:
 
   .. code-block:: bash
 
@@ -319,15 +319,14 @@ resample
 expunge
 ^^^^^^^
 
-* The **expunge** command loads the specified file and applies the ``expunge_dataframe()``
-function:
+* The **expunge** command loads the specified file and applies the ``expunge_dataframe()`` function:
 
   .. code-block:: bash
 
-      $ quantaq-cli expunge path/data.csv 
+    $ quantaq-cli expunge path/data.csv 
 
-If you run with the log level set to **INFO** using :option:`--log-level`, or with the dry-run 
-(:option:`--dry-run`) flag set, a table with the flag report will be output to the 
+If you run with the log level set to **INFO** using ``--log-level``, or with the dry-run 
+(``--dry-run``) flag set, a table with the flag report will be output to the 
 terminal screen.
 
 For example, we can run the default **expunge** command in dry-run mode:
