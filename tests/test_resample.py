@@ -5,10 +5,10 @@ import unittest
 from os import path
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
 from click.testing import CliRunner
 from loguru import logger
+import numpy as np
+import pandas as pd
 
 from quantaq_cli.toolkit.resample import resample_dataframe
 from quantaq_cli.cli import resample_command

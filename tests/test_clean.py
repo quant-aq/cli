@@ -1,9 +1,10 @@
-import unittest
-from click.testing import CliRunner
+import os
 from os import path
 from pathlib import Path
-import os
 import shutil, tempfile
+import unittest
+
+from click.testing import CliRunner
 import pandas as pd
 
 from quantaq_cli.cli import clean_command
