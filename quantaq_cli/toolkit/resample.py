@@ -19,13 +19,15 @@ def _vector_wind(
     averaged and converted back to polar form. This mirrors the reference
     C++ implementation::
 
-        ws = sqrt(mean_u**2 + mean_v**2)
-        wd = atan2(mean_u, mean_v)  in degrees, wrapped to [0, 360)
+    ws = sqrt(mean_u**2 + mean_v**2)
+    wd = atan2(mean_u, mean_v)  in degrees, wrapped to [0, 360)
 
     ``df`` already holds the per-bin averaged components, so ``ws`` is the
     magnitude of the *mean* vector (the divide-by-count is baked in), not the
     raw vector sum.
+
     """
+
     u, v = df[u_col], df[v_col]
     df[ws_col] = np.sqrt(u**2 + v**2)
     df[wd_col] = np.degrees(np.arctan2(u, v)) % 360.0
@@ -38,8 +40,8 @@ def _components_from_polar(
 
     The exact inverse of ``_vector_wind``'s recovery, so the two round-trip::
 
-        u = ws * sin(radians(wd))
-        v = ws * cos(radians(wd))
+    u = ws * sin(radians(wd))
+    v = ws * cos(radians(wd))
 
     Used when the input has wind speed/direction but not the Cartesian
     components, which must exist before wind can be vector-averaged.
@@ -67,7 +69,7 @@ def _aggregate_group(group, agg):
         pd.Series: One aggregated row for this bin.
     """
     if 'flag' not in group.columns: 
-        error = ValueError("No 'flag' column found in dataframe! Cannot implement "
+        error = ValueError("No 'flag' column found in dataframe! Cannot implement"
         "flag-aware resampling. Consider calling flag_dataframe() first.")
         logger.error(error)
         raise error
@@ -145,7 +147,7 @@ def resample_dataframe(
               - If there are no good rows (every row in the bin is flagged), all
                 rows are aggregated, and the resulting flag is the bitwise OR of every
                 flag value present in the bin.
-
+                
             If False (default), all rows in a bin are aggregated together regardless
             of flag values, and the `flag` column is dropped from the
             output.
@@ -195,7 +197,7 @@ def resample_dataframe(
         do_wind = have_uv
         if do_wind:
             derived = {ws_col, wd_col}
-
+    
     value_cols = [
         c for c in df.columns if c != on and c != 'flag' and c not in keys and c not in derived
     ]
