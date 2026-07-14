@@ -98,6 +98,28 @@ def merge_files(files, tscol="timestamp", suffixes=None, keep="both"):
             )
             df = df.loc[:, ~df.columns.str.endswith(drop_suffix)]
 
-    df = df.reset_index()  # bring timestamp back as a column named `tscol`
+        # for duplicated columns that are identical, only keep one and don't rename it
+        # otherwise identical columns like sn end up as sn_left and sn_right
+        def _same_ignoring_nan(a, b):
+            """True if a and b agree on all positions where both are non-null."""
+            both_present = a.notna() & b.notna()
+            return (a[both_present] == b[both_present]).all()
 
+        if keep == "both":
+            left_suffix, right_suffix = suffixes
+            for col in list(df.columns):
+                if not left_suffix or not col.endswith(left_suffix):
+                    continue
+                base = col[: -len(left_suffix)]
+                right_col = f"{base}{right_suffix}"
+                if right_col not in df.columns:
+                    continue
+                if _same_ignoring_nan(df[col], df[right_col]):
+                    logger.debug(
+                        "Columns {} and {} are identical; collapsing to {}.",
+                        col, right_col, base,
+                    )
+                    df[base] = df[col]
+                    df = df.drop(columns=[col, right_col])
+    df = df.reset_index()  # bring timestamp back as a column named `tscol`
     return df
