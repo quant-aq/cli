@@ -197,7 +197,7 @@ def flag_dataframe(df):
     # only need column names to be valid for flagging
     # we don't coerce dtypes so that merged files can be flagged
     # (this causes issues when the outer merge introduces nans in Int cols)
-    df = validate_schema(df, coerce_dtypes=False)
+    df = validate_schema(df)
 
     source = infer_data_source(df)
 

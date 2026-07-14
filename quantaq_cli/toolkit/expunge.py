@@ -13,7 +13,7 @@ def expunge_dataframe(df):
         df (pd.DataFrame): DataFrame to expunge.
     """
 
-    df = validate_schema(df, coerce_dtypes=False)
+    df = validate_schema(df)
 
     # get the flags (in the future, this will come from the file itself)
     list_of_flags = FLAG_DEFINITIONS
