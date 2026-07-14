@@ -67,7 +67,7 @@ def _aggregate_group(group, agg):
         pd.Series: One aggregated row for this bin.
     """
     if 'flag' not in group.columns: 
-        error = ValueError("No 'flag' column found in dataframe! Cannot implement"
+        error = ValueError("No 'flag' column found in dataframe! Cannot implement "
         "flag-aware resampling. Consider calling flag_dataframe() first.")
         logger.error(error)
         raise error
@@ -139,11 +139,13 @@ def resample_dataframe(
             Pass ``None`` to skip.        
         flag_aware: Whether to apply flag-aware row selection when resampling.
             If True, each resample bin is aggregated as follows:
+
               - If the bin has one or more good rows (non-flagged rows, flag == 0),
                 only those rows are aggregated, and the resulting flag is 0.
               - If there are no good rows (every row in the bin is flagged), all
                 rows are aggregated, and the resulting flag is the bitwise OR of every
                 flag value present in the bin.
+
             If False (default), all rows in a bin are aggregated together regardless
             of flag values, and the `flag` column is dropped from the
             output.
