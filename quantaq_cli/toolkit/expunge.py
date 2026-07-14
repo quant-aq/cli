@@ -13,18 +13,13 @@ def expunge_dataframe(df):
         df (pd.DataFrame): DataFrame to expunge.
     """
 
-    df = validate_schema(df)
+    df = validate_schema(df, coerce_dtypes=False)
 
     # get the flags (in the future, this will come from the file itself)
     list_of_flags = FLAG_DEFINITIONS
 
     # force the flag column to be an int
     df["flag"] = df["flag"].astype(int, errors='ignore')
-
-    # Drop nan flags (should never happen)
-    if df["flag"].isna().any():
-        logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
-        df = df.dropna(how='any', subset=["flag"])
 
     for label, value, cols in list_of_flags:
         mask = df["flag"] & value == value
