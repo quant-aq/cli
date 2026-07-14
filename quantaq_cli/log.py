@@ -26,8 +26,8 @@ def configure_logging(level: str = "INFO") -> None:
     """Reset loguru to log to stderr at the given level.
     
     # example usage:
-    from quantaq_py.concat import concat_files
-    from quantaq_py.log import configure_logging
+    from quantaq_cli.concat import concat_files
+    from quantaq_cli.log import configure_logging
 
     configure_logging("DEBUG")
     df = concat_files(my_files)
