@@ -10,7 +10,25 @@ on their complete functionality in the :doc:`api`.
 Using quantaq-cli in a Python script
 ------------------------------------
 
-The following functions can be imported directly from the *quantaq_cli* library:
+Importing functions
+^^^^^^^^^^^^^^^^^^^
+
+For each of the below functions, you can import them all using the toolkit module:
+
+  .. code-block:: python 
+
+    from quantaq_cli import toolkit
+
+This allows us to access functions using ``toolkit.<function_name>``:
+
+You can also import these functions directly from the *quantaq_cli* library:
+
+  .. code-block:: python 
+
+    from quantaq_cli import safe_load, concat_files, merge_files 
+    from quantaq_cli import echo_flag_dataframe, flag_dataframe
+    from quantaq_cli import resample_dataframe, expunge_dataframe, clean_dataframe
+
 
 safe_load()
 ^^^^^^^^^^^
@@ -159,6 +177,20 @@ clean_dataframe()
     
     from quantaq_cli import clean_dataframe
     df_new = clean_dataframe(df)
+
+
+configure_logging
+^^^^^^^^^^^^^^^^^
+
+To configure the log-level, import the configure_logging() function:
+
+  .. code-block:: python
+
+    from quantaq_cli.log import configure_logging
+    configure_logging("DEBUG")
+
+Accepted values for the log level config are:
+``DEBUG``, ``INFO``, ``WARNING``, and ``ERROR``. The default is ``INFO``.
 
 
 Using the command-line interface
