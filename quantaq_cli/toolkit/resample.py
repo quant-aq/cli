@@ -1,14 +1,9 @@
 from __future__ import annotations
-from pathlib import Path
 
-import click
 from loguru import logger
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
-
-from quantaq_cli.exceptions import InvalidFileExtension
-from quantaq_cli.utilities import safe_load
 
 
 # Default (u, v, speed, direction) column names for vector wind averaging.
@@ -54,6 +49,62 @@ def _components_from_polar(
     df[v_col] = df[ws_col] * np.cos(wd_rad)
     return df
 
+def _aggregate_group(group, agg):
+    """Aggregate a single resample bin using flag-aware row selection.
+
+    This attempts to mirror the averaging logic in the firmware:
+    If the bin has at least one good row (flag == 0), only those rows
+    are aggregated and the resulting flag is 0. If there are no good rows (every 
+    row in the bin is flagged), all rows are aggregated instead, and the resulting flag is the
+    bitwise OR of every flag value that was present in the bin.
+
+    Args:
+        group (pd.DataFrame): All rows falling in one resample bin
+        agg (dict): Mapping of column name -> aggregation method, defined inside
+            resample_dataframe.
+
+    Returns:
+        pd.Series: One aggregated row for this bin.
+    """
+    if 'flag' not in group.columns: 
+        error = ValueError("No 'flag' column found in dataframe! Cannot implement"
+        "flag-aware resampling. Consider calling flag_dataframe() first.")
+        logger.error(error)
+        raise error
+
+    # resample can produce empty bins so we check len(group)
+    if len(group): 
+        clean_mask = group['flag'] == 0 # true for every good row
+
+        # there's at least 1 good row --> aggregate only the good rows, and set the new flag to 0
+        if clean_mask.any():
+            subset = group.loc[clean_mask]
+            group_flag = 0 
+
+        # there are no good rows --> aggregate all rows, and combine flags using bitwise OR
+        else:
+            subset = group 
+            group_flag = int(np.bitwise_or.reduce(group['flag'].to_numpy()))
+    else:
+        # empty bin (produced by resampe) --> all columns will be nan, include the flag
+        subset = group
+        group_flag = np.nan
+
+    # hack for naming collision issue with "first" and "last" agg methods
+    # (TypeError: NDFrame.first() missing 1 required positional argument: 'offset')
+    values = {}
+    for col, how in agg.items():
+        if how == "first":
+            values[col] = subset[col].iloc[0] if len(subset) else np.nan
+        elif how == "last":
+            values[col] = subset[col].iloc[-1] if len(subset) else np.nan
+        else:
+            values[col] = subset[col].agg(how)
+
+    values['flag'] = group_flag
+
+    return pd.Series(values)
+
 def resample_dataframe(
     df: pd.DataFrame,
     rule: str,
@@ -61,6 +112,7 @@ def resample_dataframe(
     on: str = "timestamp",
     by: str | list[str] | None = None,
     wind: tuple[str, str, str, str] | None = WIND_COLUMNS,
+    flag_aware: bool = False,
     numeric_how: str = "mean",
     nonnumeric_how: str = "first",
 ) -> pd.DataFrame:
@@ -84,7 +136,17 @@ def resample_dataframe(
             they are derived from the averaged u/v components instead (see
             ``_vector_wind``). If only speed/direction are present, the u/v
             components are first created from them (see ``_components_from_polar``).
-            Pass ``None`` to skip.
+            Pass ``None`` to skip.        
+        flag_aware: Whether to apply flag-aware row selection when resampling.
+            If True, each resample bin is aggregated as follows:
+              - If the bin has one or more good rows (non-flagged rows, flag == 0),
+                only those rows are aggregated, and the resulting flag is 0.
+              - If there are no good rows (every row in the bin is flagged), all
+                rows are aggregated, and the resulting flag is the bitwise OR of every
+                flag value present in the bin.
+            If False (default), all rows in a bin are aggregated together regardless
+            of flag values, and the `flag` column is dropped from the
+            output.
         numeric_how: Aggregation for numeric columns.
         nonnumeric_how: Aggregation for non-numeric columns.
 
@@ -133,7 +195,7 @@ def resample_dataframe(
             derived = {ws_col, wd_col}
 
     value_cols = [
-        c for c in df.columns if c != on and c not in keys and c not in derived
+        c for c in df.columns if c != on and c != 'flag' and c not in keys and c not in derived
     ]
     agg = {
         c: (numeric_how if is_numeric_dtype(df[c]) else nonnumeric_how)
@@ -141,10 +203,25 @@ def resample_dataframe(
     }
 
     indexed = df.set_index(on)
-    if keys:
-        out = indexed.groupby(keys).resample(rule).agg(agg).reset_index()
+    if flag_aware:
+        if keys:
+            out = (
+                indexed.groupby(keys)
+                .resample(rule)
+                .apply(_aggregate_group, agg=agg)
+                .reset_index()
+            )
+        else:
+            out = (
+                indexed.resample(rule)
+                .apply(_aggregate_group, agg=agg)
+                .reset_index()
+            )
     else:
-        out = indexed.resample(rule).agg(agg).reset_index()
+        if keys:
+            out = indexed.groupby(keys).resample(rule).agg(agg).reset_index()
+        else:
+            out = indexed.resample(rule).agg(agg).reset_index()
 
     if do_wind:
         out = _vector_wind(out, *wind)

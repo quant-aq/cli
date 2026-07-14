@@ -4,6 +4,7 @@ from quantaq_cli.toolkit.resample import resample_dataframe
 from quantaq_cli.toolkit.flag import flag_dataframe, echo_flag_table, flag_summary
 from quantaq_cli.toolkit.expunge import expunge_dataframe
 from quantaq_cli.toolkit.munge import clean_dataframe
+from quantaq_cli.toolkit.load import safe_load
 
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "echo_flag_table",
     "expunge_dataframe",
     "flag_summary",
-    "clean_dataframe"
+    "clean_dataframe",
+    "safe_load"
 ]

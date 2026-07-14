@@ -13,6 +13,7 @@ from pandas.testing import assert_frame_equal
 from quantaq_cli import expunge_dataframe, flag_summary
 from quantaq_cli.cli import expunge_command
 
+
 class SetupTestCase(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -96,6 +97,31 @@ class SetupTestCase(unittest.TestCase):
         # is it a csv?
         self.assertEqual(p.suffix, ".csv")
 
+    def test_expunge_csv_modulairx_db(self):
+        runner = CliRunner()
+        result = runner.invoke(expunge_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"), 
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("Saving file" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
     def test_expunge_csv_modulairx_cloudapi(self):
         runner = CliRunner()
         result = runner.invoke(expunge_command, 
@@ -127,11 +153,11 @@ def test_expunge_dataframe_noop():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 77.6,
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 77.6,
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -142,9 +168,9 @@ def test_expunge_dataframe_noop():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
-    assert_frame_equal(flagged, sample_df)
+    assert_frame_equal(expunged, sample_df)
 
 
 def test_expunge_dataframe_irrelevant_flag():
@@ -156,11 +182,11 @@ def test_expunge_dataframe_irrelevant_flag():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 77.6,
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 77.6,
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -171,9 +197,9 @@ def test_expunge_dataframe_irrelevant_flag():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
-    assert_frame_equal(flagged, sample_df)
+    assert_frame_equal(expunged, sample_df)
 
 
 def test_expunge_dataframe_expunges_rht():
@@ -182,11 +208,11 @@ def test_expunge_dataframe_expunges_rht():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 20000,  # too high!
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 20000,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -197,25 +223,25 @@ def test_expunge_dataframe_expunges_rht():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
     # Ensure rh and temp are expunged.
-    expected = sample_df.copy().assign(rh=np.nan, temp=np.nan)
-    assert_frame_equal(flagged, expected, check_dtype=False)
+    expected = sample_df.copy().assign(sample_rh=np.nan, sample_temp=np.nan)
+    assert_frame_equal(expunged, expected, check_dtype=False)
 
 
 def test_expunge_dataframe_expunges_startup():
-    """Ensure expunge_dataframe expunges all columns correctly for FLAG_STARTUP."""
+    """Ensure expunge_dataframe expunges gas columns correctly for FLAG_STARTUP."""
     sample_df = pd.DataFrame(
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
                 "sn": "MOD-12345",
-                "rh": 20000.,  # too high!
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 20000.,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -225,7 +251,7 @@ def test_expunge_dataframe_expunges_startup():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
     # Ensure most columns are expunged but key metadata is unaffected.
     expected = pd.DataFrame(
@@ -233,12 +259,12 @@ def test_expunge_dataframe_expunges_startup():
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
                 "sn": "MOD-12345",
-                "rh": np.nan,
-                "temp": np.nan,
-                "pm1_env": np.nan,
-                "pm25_env": np.nan,
-                "pm10_env": np.nan,
-                "neph_bin0": np.nan,
+                "sample_rh": 20000.,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
+                "neph_bin0": 1590.375,
                 "co_we": np.nan,
                 "co_ae": np.nan,
                 "co_diff": np.nan,
@@ -246,7 +272,7 @@ def test_expunge_dataframe_expunges_startup():
             },
         ],
     )
-    assert_frame_equal(flagged, expected)
+    assert_frame_equal(expunged, expected)
 
 
 def test_flag_summary_basic():
@@ -278,9 +304,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": 64,
                 "FLAG_O3": 128,
                 "FLAG_OPC": 2,
-                "FLAG_RHTP": 8,
+                "FLAG_RHT": 8,
                 "FLAG_SO2": 512,
                 "FLAG_STARTUP": 1,
+                "FLAG_OVERHEAT": 4096,
             },
             "# OCCURENCES": {
                 "FLAG_BAT": 0,
@@ -292,9 +319,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": 1,
                 "FLAG_O3": 0,
                 "FLAG_OPC": 0,
-                "FLAG_RHTP": 0,
+                "FLAG_RHT": 0,
                 "FLAG_SO2": 0,
                 "FLAG_STARTUP": 2,
+                "FLAG_OVERHEAT": 0,
             },
             "% DATA": {
                 "FLAG_BAT": "0.0",
@@ -306,9 +334,10 @@ def test_flag_summary_basic():
                 "FLAG_NO2": "33.3",
                 "FLAG_O3": "0.0",
                 "FLAG_OPC": "0.0",
-                "FLAG_RHTP": "0.0",
+                "FLAG_RHT": "0.0",
                 "FLAG_SO2": "0.0",
                 "FLAG_STARTUP": "66.7",
+                "FLAG_OVERHEAT": "0.0",
             },
         },
     )

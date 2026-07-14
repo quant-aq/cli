@@ -7,7 +7,8 @@ import shutil, tempfile
 import pandas as pd
 
 from quantaq_cli.cli import concat_command
-from quantaq_cli.utilities import safe_load
+from quantaq_cli.toolkit.load import safe_load
+
 
 class SetupTestCase(unittest.TestCase):
     def setUp(self):
@@ -103,6 +104,36 @@ class SetupTestCase(unittest.TestCase):
         # are the number of lines correct?
         df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
+        df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
+
+        self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])
+
+    def test_concat_files_modulairx_db(self):
+        runner = CliRunner()
+        result = runner.invoke(concat_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"),
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file2.csv"),
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+        # are the number of lines correct?
+        df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"))
+        df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file2.csv"))
         df3 = safe_load(os.path.join(self.test_dir, "output.csv")) 
 
         self.assertEqual(df1.shape[0] + df2.shape[0], df3.shape[0])

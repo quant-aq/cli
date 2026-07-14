@@ -42,30 +42,30 @@ class SetupTestCase(unittest.TestCase):
         # is it a csv?
         self.assertEqual(p.suffix, ".csv")
 
-    #def test_flag_files_modulairx_rawsd(self):
-    #    NOTE: not currently implemented
-    #    runner = CliRunner()
-    #    result = runner.invoke(flag_command, 
-    #                [
-    #                    "-o",
-    #                    os.path.join(self.test_dir, "output.csv"),
-    #                    "-v",
-    #                    os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
-    #                ], catch_exceptions=False
-    #            )
+    def test_flag_files_modulairx_rawsd(self):
+        runner = CliRunner()
+        result = runner.invoke(flag_command, 
+                    [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"), 
+                    ], catch_exceptions=False
+                )
         
         # did it succeed?
-    #    self.assertEqual(result.exit_code, 0)#
+        self.assertEqual(result.exit_code, 0)#
 
-    #    # did it output the correct text?
-    #    self.assertTrue("File to read" in result.output)
+        # did it output the correct text?
+        self.assertTrue("File to read" in result.output)
 
-    #    # make sure the file exists
-    #    p = Path(self.test_dir + "/output.csv")
-    #    self.assertTrue(p.exists())
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
         
-    #    # is it a csv?
-    #    self.assertEqual(p.suffix, ".csv")
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
 
     def test_flag_files_modulairx_cloudapi(self):
         runner = CliRunner()
@@ -76,6 +76,31 @@ class SetupTestCase(unittest.TestCase):
                         "--log-level",
                         "DEBUG",
                         os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), 
+                    ], catch_exceptions=False
+                )
+        
+        # did it succeed?
+        self.assertEqual(result.exit_code, 0)
+
+        # did it output the correct text?
+        self.assertTrue("File to read" in result.output)
+
+        # make sure the file exists
+        p = Path(self.test_dir + "/output.csv")
+        self.assertTrue(p.exists())
+        
+        # is it a csv?
+        self.assertEqual(p.suffix, ".csv")
+
+    def test_flag_files_modulairx_db(self):
+        runner = CliRunner()
+        result = runner.invoke(flag_command, 
+                   [
+                        "-o",
+                        os.path.join(self.test_dir, "output.csv"),
+                        "--log-level",
+                        "DEBUG",
+                        os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"), 
                     ], catch_exceptions=False
                 )
         

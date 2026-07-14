@@ -1,6 +1,6 @@
 from pathlib import Path
-
 import pkg_resources
+
 import rich_click as click
 from loguru import logger
 
@@ -9,8 +9,7 @@ from quantaq_cli import flag_dataframe, echo_flag_table, expunge_dataframe
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.log import configure_logging, LOG_LEVELS
 from quantaq_cli.toolkit.resample import WIND_COLUMNS
-from quantaq_cli.utilities import safe_load
-from quantaq_cli.variables import SUPPORTED_MODELS, SUPPORTED_SOURCES
+from quantaq_cli.toolkit.load import safe_load
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -112,6 +111,18 @@ def merge_command(files, output, tscol, log_level):
     default=("wx_u", "wx_v", "wx_ws", "wx_wd"),
     help="(u, v, speed, direction) column names. The u/v columns don't need to be present in the dataframe, but the column names need to be specified.",
 )
+@click.option(
+    "--flag-aware",
+    is_flag=True,
+    default=False,
+    help=(
+        "Whether to apply flag-aware row selection when resampling: bins "
+        "with >1 good rows --> average only those rows; bins with no good "
+        "rows -> average all rows and OR their flag values "
+        "together. If False (default), all rows are averaged regardless "
+        "of flags and the flag column is dropped."
+    ),
+)
 @click.option("--numeric_how", default="mean", help="Aggregation for numeric columns.")
 @click.option("--nonnumeric_how", default="first", help="Aggregation for non-numeric columns.")
 @click.option("--log-level", default="INFO",
@@ -124,6 +135,7 @@ def resample_command(file, rule, output, log_level, **kwargs):
     on = kwargs.pop("on", "timestamp")
     by = kwargs.pop("by", None)
     wind = kwargs.pop("wind", WIND_COLUMNS)
+    flag_aware = kwargs.pop("flag_aware", False)
     numeric_how = kwargs.pop("numeric_how", "mean")
     nonnumeric_how = kwargs.pop("nonnumeric_how", "first")
 
@@ -148,6 +160,7 @@ def resample_command(file, rule, output, log_level, **kwargs):
         on=on,
         by=by,
         wind=wind,
+        flag_aware=flag_aware,
         numeric_how=numeric_how,
         nonnumeric_how=nonnumeric_how,
     )

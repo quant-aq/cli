@@ -1,8 +1,9 @@
-import numpy as np
 from loguru import logger
+import numpy as np
 
 from quantaq_cli.utilities import determine_timestamp_column
 from quantaq_cli.variables import FLAG_DEFINITIONS
+from quantaq_cli.schema import validate_schema
 
 
 def expunge_dataframe(df):
@@ -11,6 +12,9 @@ def expunge_dataframe(df):
     Args:
         df (pd.DataFrame): DataFrame to expunge.
     """
+
+    df = validate_schema(df)
+
     # get the flags (in the future, this will come from the file itself)
     list_of_flags = FLAG_DEFINITIONS
 
@@ -24,7 +28,7 @@ def expunge_dataframe(df):
 
     for label, value, cols in list_of_flags:
         mask = df["flag"] & value == value
-        if not mask.any():
+        if not mask.any() or cols is None:
             continue
 
         # NaN the necessary columns
