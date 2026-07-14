@@ -187,7 +187,17 @@ def flag_dataframe(df):
     """
     df = df.copy()
 
-    df = validate_schema(df)
+    # Drop nan flags (could happen after a merge)
+    if "flag" not in df.columns:
+        df["flag"] = 0
+    elif df["flag"].isna().any():
+        logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
+        df = df.dropna(how='any', subset=["flag"])
+
+    # only need column names to be valid for flagging
+    # we don't coerce dtypes so that merged files can be flagged
+    # (this causes issues when the outer merge introduces nans in Int cols)
+    df = validate_schema(df, coerce_dtypes=False)
 
     source = infer_data_source(df)
 
@@ -197,6 +207,7 @@ def flag_dataframe(df):
     # create flag column if it doesn't exist
     if "flag" not in df.columns:
         df["flag"] = 0
+
 
     # sort the dataframe once before adding flags
     df = fix_timestamps(df, sort_values=True)
