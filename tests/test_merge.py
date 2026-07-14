@@ -21,6 +21,24 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
+    def assert_merge_columns_valid(self, df1, df2, df3):
+        """Assert df3 contains every non-timestamp column from df1/df2
+        (possibly suffixed), and did not gain or lose columns beyond
+        what a collapsing merge should produce."""
+        for col in set(df1.columns) | set(df2.columns):
+            if col == "timestamp":
+                continue
+            self.assertTrue(
+                col in df3.columns
+                or f"{col}_left" in df3.columns
+                or f"{col}_right" in df3.columns,
+                f"Expected {col!r} (or a suffixed variant) in merged output",
+            )
+
+        # the output should not have more columns than if nothing collapsed,
+        # and not less than if everything overlapping collapsed
+        self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+
     def test_merge_files_modulair_db(self):
         runner = CliRunner()
         result = runner.invoke(merge_command, 
@@ -52,20 +70,9 @@ class SetupTestCase(unittest.TestCase):
         # are the number of lines correct?
         df1 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"))
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"))
-        # dont safe_load the output since merged files will produce NaNs in integer cols
-        df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv")) 
+        df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-        for col in set(df1.columns) | set(df2.columns):
-            if col == "timestamp":
-                continue
-            self.assertTrue(
-                col in df3.columns or f"{col}_left" in df3.columns or f"{col}_right" in df3.columns,
-                f"Expected {col!r} (or a suffixed variant) in merged output"
-            )
-
-        # the output should not have more columns than if nothing collapsed, and 
-        # not less than if everything overlapping collapsed)
-        self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+        self.assert_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulair_db_parquet(self):
         runner = CliRunner()
@@ -97,22 +104,9 @@ class SetupTestCase(unittest.TestCase):
         # are the number of lines correct?
         df1 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00256-db-cleaned-file1.parquet"))
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair/ref/bos_roxbury-cleaned.parquet"))
-        # dont safe_load the output since merged files will produce NaNs in integer cols
-        df3 = pd.read_parquet(os.path.join(self.test_dir, "output.parquet"))
+        df3 = safe_load(os.path.join(self.test_dir, "output.parquet"), validate_dataframe_schema=False)
         
-        for col in set(df1.columns) | set(df2.columns):
-            if col == "timestamp":
-                continue
-            self.assertTrue(
-                col in df3.columns or f"{col}_left" in df3.columns or f"{col}_right" in df3.columns,
-                f"Expected {col!r} (or a suffixed variant) in merged output"
-            )
-
-        # note that merge will collapse columns with the same name if they are identical
-        # the output should not have more columns than if nothing collapsed, and 
-        # not less than if everything overlapping collapsed)
-
-        self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+        self.assert_merge_columns_valid(df1, df2, df3)
 
     #def test_concat_then_merge(self):
     #    runner = CliRunner()
@@ -181,21 +175,9 @@ class SetupTestCase(unittest.TestCase):
             # are the number of lines correct?
             df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file1.csv"))
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"))
-            # dont safe_load the output since merged files will produce NaNs in integer cols
-            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+            df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            for col in set(df1.columns) | set(df2.columns):
-                if col == "timestamp":
-                    continue
-                self.assertTrue(
-                    col in df3.columns or f"{col}_left" in df3.columns or f"{col}_right" in df3.columns,
-                    f"Expected {col!r} (or a suffixed variant) in merged output"
-                )
-
-            # note that merge will collapse columns with the same name if they are identical
-            # the output should not have more columns than if nothing collapsed, and 
-            # not less than if everything overlapping collapsed)
-            self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+            self.assert_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulairx_cloudapi(self):
             runner = CliRunner()
@@ -227,21 +209,9 @@ class SetupTestCase(unittest.TestCase):
             # are the number of lines correct?
             df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"))
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
-            # dont safe_load the output since merged files will produce NaNs in integer cols
-            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+            df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            for col in set(df1.columns) | set(df2.columns):
-                if col == "timestamp":
-                    continue
-                self.assertTrue(
-                    col in df3.columns or f"{col}_left" in df3.columns or f"{col}_right" in df3.columns,
-                    f"Expected {col!r} (or a suffixed variant) in merged output"
-                )
-
-            # note that merge will collapse columns with the same name if they are identical
-            # the output should not have more columns than if nothing collapsed, and 
-            # not less than if everything overlapping collapsed)
-            self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+            self.assert_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulairx_db(self):
             runner = CliRunner()
@@ -273,19 +243,7 @@ class SetupTestCase(unittest.TestCase):
             # are the number of lines correct?
             df1 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file1.csv"))
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file2.csv"))
-            # dont safe_load the output since merged files will produce NaNs in integer cols
-            df3 = pd.read_csv(os.path.join(self.test_dir, "output.csv"))
+            df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            for col in set(df1.columns) | set(df2.columns):
-                if col == "timestamp":
-                    continue
-                self.assertTrue(
-                    col in df3.columns or f"{col}_left" in df3.columns or f"{col}_right" in df3.columns,
-                    f"Expected {col!r} (or a suffixed variant) in merged output"
-                )
-
-            # note that merge will collapse columns with the same name if they are identical
-            # the output should not have more columns than if nothing collapsed, and 
-            # not less than if everything overlapping collapsed)
-            self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
+            self.assert_merge_columns_valid(df1, df2, df3)
             
