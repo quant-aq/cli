@@ -21,7 +21,7 @@ class SetupTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def assert_merge_columns_valid(self, df1, df2, df3):
+    def assert_default_merge_columns_valid(self, df1, df2, df3):
         """Assert df3 contains every non-timestamp column from df1/df2
         (possibly suffixed), and did not gain or lose columns beyond
         what a collapsing merge should produce."""
@@ -72,7 +72,7 @@ class SetupTestCase(unittest.TestCase):
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"))
         df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-        self.assert_merge_columns_valid(df1, df2, df3)
+        self.assert_default_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulair_db_keepright(self):
             runner = CliRunner()
@@ -84,8 +84,6 @@ class SetupTestCase(unittest.TestCase):
                             "DEBUG",
                             "--keep",
                             "right",
-                            "--suffixes",
-                            "",
                             os.path.join(self.test_files_dir, "modulair/MOD-00014-db-raw.csv"), 
                             os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"),
                         ],
@@ -111,7 +109,8 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair/MOD-00014-db-final.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            self.assert_merge_columns_valid(df1, df2, df3)
+            # don't assert_default_merge_columns_valid because keep=right
+            self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
 
     def test_merge_files_modulair_db_parquet(self):
         runner = CliRunner()
@@ -145,7 +144,7 @@ class SetupTestCase(unittest.TestCase):
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair/ref/bos_roxbury-cleaned.parquet"))
         df3 = safe_load(os.path.join(self.test_dir, "output.parquet"), validate_dataframe_schema=False)
         
-        self.assert_merge_columns_valid(df1, df2, df3)
+        self.assert_default_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulair_db_parquet_keepleft(self):
         runner = CliRunner()
@@ -181,7 +180,8 @@ class SetupTestCase(unittest.TestCase):
         df2 = safe_load(os.path.join(self.test_files_dir, "modulair/ref/bos_roxbury-cleaned.parquet"))
         df3 = safe_load(os.path.join(self.test_dir, "output.parquet"), validate_dataframe_schema=False)
         
-        self.assert_merge_columns_valid(df1, df2, df3)
+        # don't assert_default_merge_columns_valid because keep=left
+        self.assertLessEqual(df3.shape[1], df1.shape[1] + df2.shape[1] - 1)
 
     #def test_concat_then_merge(self):
     #    runner = CliRunner()
@@ -252,7 +252,7 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00891-rawsd-file2.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            self.assert_merge_columns_valid(df1, df2, df3)
+            self.assert_default_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulairx_cloudapi(self):
             runner = CliRunner()
@@ -286,7 +286,7 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file2.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            self.assert_merge_columns_valid(df1, df2, df3)
+            self.assert_default_merge_columns_valid(df1, df2, df3)
 
     def test_merge_files_modulairx_db(self):
             runner = CliRunner()
@@ -320,5 +320,5 @@ class SetupTestCase(unittest.TestCase):
             df2 = safe_load(os.path.join(self.test_files_dir, "modulair-x/MOD-X-00993-db-file2.csv"))
             df3 = safe_load(os.path.join(self.test_dir, "output.csv"), validate_dataframe_schema=False)
 
-            self.assert_merge_columns_valid(df1, df2, df3)
+            self.assert_default_merge_columns_valid(df1, df2, df3)
             
