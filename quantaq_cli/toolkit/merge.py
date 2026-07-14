@@ -6,11 +6,13 @@ from quantaq_cli.toolkit.load import safe_load
 
 def merge_files(files, tscol="timestamp", suffixes=None, keep="both"):
     """Merge two files on a timestamp column.
+
     Args:
         files (list): List of file paths to merge.
         tscol (str, optional): Name of the timestamp column. Default is "timestamp".
         suffixes (tuple or str, optional): Suffix(es) to apply to overlapping
             column names.
+
             - If keep="both": must be a length-2 tuple, where each element is
               the suffix applied to the left and right DataFrame's version of
               an overlapping column, respectively.  Defaults to
@@ -18,6 +20,7 @@ def merge_files(files, tscol="timestamp", suffixes=None, keep="both"):
             - If keep="left" or keep="right": must be a single string which is 
               applied only to the kept side's column name. Defaults to "" 
               (kept column keeps its original name) if not specified.
+              
         keep (str, optional): Which side to keep for columns that overlap
             between files: "both" keeps both suffixed columns, "left" keeps
             only the left/earlier file's version, "right" keeps only the
