@@ -7,6 +7,8 @@ from quantaq_cli.variables import FLAG_DEFINITIONS, FLAG_VALUES
 from quantaq_cli.variables import Range, Gap, Single, Multiple, Ratio, OPS, flag_name_to_criteria
 from quantaq_cli.utilities import fix_timestamps, determine_timestamp_column
 from quantaq_cli.utilities import infer_data_source, infer_data_model
+from quantaq_cli.schema import validate_schema
+
 
 def evaluate_criterion(df, criterion):
     """Create a mask that is True for every row meeting the flag criterion.
@@ -184,6 +186,8 @@ def flag_dataframe(df):
         pd.DataFrame: The flagged DataFrame.
     """
     df = df.copy()
+
+    df = validate_schema(df)
 
     source = infer_data_source(df)
 

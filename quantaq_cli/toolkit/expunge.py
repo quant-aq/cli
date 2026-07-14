@@ -3,6 +3,7 @@ import numpy as np
 
 from quantaq_cli.utilities import determine_timestamp_column
 from quantaq_cli.variables import FLAG_DEFINITIONS
+from quantaq_cli.schema import validate_schema
 
 
 def expunge_dataframe(df):
@@ -11,6 +12,9 @@ def expunge_dataframe(df):
     Args:
         df (pd.DataFrame): DataFrame to expunge.
     """
+
+    df = validate_schema(df)
+
     # get the flags (in the future, this will come from the file itself)
     list_of_flags = FLAG_DEFINITIONS
 

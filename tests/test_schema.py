@@ -18,9 +18,9 @@ class SetupTestCase(unittest.TestCase):
 
     def test_schema_migration_modpm_rawsd(self):
         df1 = safe_load(os.path.join(
-            self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), standardize_schema=False)
+            self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), validate_dataframe_schema=False)
         df2 = safe_load(os.path.join(
-            self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), standardize_schema=True)
+            self.test_files_dir, "modulair-pm/MOD-PM-00001-rawsd-file1.csv"), validate_dataframe_schema=True)
 
         df1_expected_columns = [
             'timestamp_iso',
@@ -149,9 +149,9 @@ class SetupTestCase(unittest.TestCase):
 
     def test_schema_migration_modx_api(self):
         df1 = safe_load(os.path.join(
-            self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), standardize_schema=False)
+            self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), validate_dataframe_schema=False)
         df2 = safe_load(os.path.join(
-            self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), standardize_schema=True)
+            self.test_files_dir, "modulair-x/MOD-X-00993-cloudapi-file1.csv"), validate_dataframe_schema=True)
 
         df1_expected_columns =[
             'dd_operating_state',

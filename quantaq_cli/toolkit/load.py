@@ -4,11 +4,10 @@ from loguru import logger
 import pandas as pd
 
 from quantaq_cli.exceptions import InvalidFileExtension
-from quantaq_cli.utilities import drop_unnamed
-from quantaq_cli.toolkit.munge import clean_dataframe
+from quantaq_cli.schema import validate_schema
 
 
-def safe_load(fpath, standardize_schema=True):
+def safe_load(fpath, validate_dataframe_schema=True):
     """Load a CSV or parquet file.
     
     Args:
@@ -49,10 +48,7 @@ def safe_load(fpath, standardize_schema=True):
     elif as_csv:
         tmp = pd.read_csv(fpath)
 
-    # drop the extra column if it was added
-    tmp = drop_unnamed(tmp)
-
-    if standardize_schema:
-        tmp = clean_dataframe(tmp)
+    if validate_dataframe_schema:
+        tmp = validate_schema(tmp)
 
     return tmp

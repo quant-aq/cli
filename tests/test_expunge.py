@@ -153,11 +153,11 @@ def test_expunge_dataframe_noop():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 77.6,
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 77.6,
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -168,9 +168,9 @@ def test_expunge_dataframe_noop():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
-    assert_frame_equal(flagged, sample_df)
+    assert_frame_equal(expunged, sample_df)
 
 
 def test_expunge_dataframe_irrelevant_flag():
@@ -182,11 +182,11 @@ def test_expunge_dataframe_irrelevant_flag():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 77.6,
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 77.6,
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -197,9 +197,9 @@ def test_expunge_dataframe_irrelevant_flag():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
-    assert_frame_equal(flagged, sample_df)
+    assert_frame_equal(expunged, sample_df)
 
 
 def test_expunge_dataframe_expunges_rht():
@@ -208,11 +208,11 @@ def test_expunge_dataframe_expunges_rht():
         [
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
-                "rh": 20000,  # too high!
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 20000,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -223,11 +223,11 @@ def test_expunge_dataframe_expunges_rht():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
     # Ensure rh and temp are expunged.
-    expected = sample_df.copy().assign(rh=np.nan, temp=np.nan)
-    assert_frame_equal(flagged, expected, check_dtype=False)
+    expected = sample_df.copy().assign(sample_rh=np.nan, sample_temp=np.nan)
+    assert_frame_equal(expunged, expected, check_dtype=False)
 
 
 def test_expunge_dataframe_expunges_startup():
@@ -237,11 +237,11 @@ def test_expunge_dataframe_expunges_startup():
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
                 "sn": "MOD-12345",
-                "rh": 20000.,  # too high!
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 20000.,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": 758.8,
                 "co_ae": 656.8,
@@ -251,7 +251,7 @@ def test_expunge_dataframe_expunges_startup():
         ],
     )
 
-    flagged = expunge_dataframe(sample_df)
+    expunged = expunge_dataframe(sample_df)
 
     # Ensure most columns are expunged but key metadata is unaffected.
     expected = pd.DataFrame(
@@ -259,11 +259,11 @@ def test_expunge_dataframe_expunges_startup():
             {
                 "timestamp": pd.to_datetime("2023-03-10T17:41:24Z"),
                 "sn": "MOD-12345",
-                "rh": 20000.,  # too high!
-                "temp": -10.4,
-                "pm1_env": 10.6,
-                "pm25_env": 25.0,
-                "pm10_env": 32.4,
+                "sample_rh": 20000.,  # too high!
+                "sample_temp": -10.4,
+                "neph_pm1_env": 10.6,
+                "neph_pm25_env": 25.0,
+                "neph_pm10_env": 32.4,
                 "neph_bin0": 1590.375,
                 "co_we": np.nan,
                 "co_ae": np.nan,
@@ -272,7 +272,7 @@ def test_expunge_dataframe_expunges_startup():
             },
         ],
     )
-    assert_frame_equal(flagged, expected)
+    assert_frame_equal(expunged, expected)
 
 
 def test_flag_summary_basic():

@@ -6,20 +6,8 @@ import pandera.pandas as pa
 
 from quantaq_cli.exceptions import InvalidFileExtension
 from quantaq_cli.schema import COLUMN_DEFINITIONS
-from quantaq_cli.schema import standardize_columns, build_dtype_schema
-
-
-def drop_unnamed(df):
-    """Drop unnamed columns.
-    
-    Args:
-        df (pd.DataFrame): DataFrame to prune columns of.
-    """
-
-    unnamed = [c for c in df.columns if str(c).startswith("Unnamed:")]
-    if unnamed:
-        df.drop(columns=unnamed, inplace=True)
-    return df 
+from quantaq_cli.schema import validate_schema
+ 
 
 def infer_data_source(df, tscol=None):
     """Determine the data source (rawSD or database) from the 
