@@ -6,8 +6,8 @@
 quantaq-cli
 ============
 
-**QuantAQ-CLI** provides an easy-to-use command line interface for munging and 
-interacting with QuantAQ air quality sensor data.
+**QuantAQ-CLI** provides an easy-to-use Python library and command line 
+interface for munging and interacting with QuantAQ air quality sensor data.
 
 
 .. toctree::
@@ -17,5 +17,3 @@ interacting with QuantAQ air quality sensor data.
    usage
    contributing
    api
-
-
