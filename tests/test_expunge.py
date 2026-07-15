@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from quantaq_cli import expunge_dataframe, flag_summary
+from quantaq_cli import expunge_dataframe
+from quantaq_cli.toolkit.flag import _flag_summary
 from quantaq_cli.cli import expunge_command
 
 
@@ -276,7 +277,7 @@ def test_expunge_dataframe_expunges_startup():
 
 
 def test_flag_summary_basic():
-    """Simple check to confirm flag_summary correctness."""
+    """Simple check to confirm _flag_summary correctness."""
     sample_df = pd.DataFrame(
         [
             {
@@ -290,7 +291,7 @@ def test_flag_summary_basic():
             },
         ],
     )
-    summary = flag_summary(sample_df)
+    summary = _flag_summary(sample_df)
 
     expected = pd.DataFrame(
         {

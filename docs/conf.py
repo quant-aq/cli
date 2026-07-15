@@ -35,6 +35,7 @@ release = version
 
 
 # -- General configuration ---------------------------------------------------
+autosummary_generate = True
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -42,9 +43,10 @@ release = version
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon', # google-style docstrings
     'sphinx_click.ext',
     'sphinx.ext.intersphinx',
-    'recommonmark',
+    'myst_parser',
     "sphinx_rtd_theme"
 ]
 
@@ -56,6 +58,11 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = True
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 # -- Options for HTML output -------------------------------------------------
 

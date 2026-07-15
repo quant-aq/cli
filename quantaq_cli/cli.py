@@ -77,14 +77,34 @@ def concat_command(files, output, log_level):
 
 @click.command("merge", short_help="merge two files together on their timestamp")
 @click.argument("files", nargs=-1, type=click.Path())
-@click.option("-ts", "--tscol", default="timestamp", help="The column by which to join the files", type=str)
+@click.option("--tscol", default="timestamp", help="The column by which to join the files", type=str)
+@click.option(
+    "--suffixes",
+    multiple=True,
+    default=None,
+    help=(
+        "Suffix(es) for overlapping columns. Pass it twice for "
+        "--keep=both, e.g. --suffixes _left --suffixes _right. Pass it "
+        "once for --keep=left/right, e.g. --suffixes _new. Omit to use "
+        "merge_files' defaults."
+    ),
+)
+@click.option("--keep", default="both", type=click.Choice(["both", "left", "right"]), help="Which side to keep for columns that overlap between files")
 @click.option("-o", "--output", default="output.csv", help="The filepath where you would like to save the file", type=str)
 @click.option("--log-level", default="INFO",
               type=click.Choice(LOG_LEVELS, case_sensitive=False),
               help="loguru log level (default: INFO)")
-def merge_command(files, output, tscol, log_level):
+def merge_command(files, output, tscol, suffixes, keep, log_level):
     """Merge FILES together and save to OUTPUT."""
     configure_logging(log_level)
+
+    # normalize --suffixes: 0 occurrences -> None, 1 -> str, 2 -> tuple
+    if not suffixes:
+        suffixes = None
+    elif len(suffixes) == 1:
+        suffixes = suffixes[0]
+    elif len(suffixes) == 2:
+        suffixes = tuple(suffixes)
 
     # make sure the extension is either a csv or parquet format
     check_extension(output)
@@ -92,7 +112,7 @@ def merge_command(files, output, tscol, log_level):
     # merge everything in filepath
     logger.info("Files to read: {}", files)
     
-    df = merge_files(files, tscol)
+    df = merge_files(files, tscol=tscol, suffixes=suffixes, keep=keep)
            
     # save the file
     save_file(df, output)

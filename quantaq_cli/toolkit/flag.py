@@ -1,4 +1,5 @@
 from loguru import logger
+import numpy as np
 import pandas as pd
 import rich
 from rich.table import Table
@@ -10,7 +11,7 @@ from quantaq_cli.utilities import infer_data_source, infer_data_model
 from quantaq_cli.schema import validate_schema
 
 
-def evaluate_criterion(df, criterion):
+def _evaluate_criterion(df, criterion):
     """Create a mask that is True for every row meeting the flag criterion.
     
     Args:
@@ -81,7 +82,7 @@ def evaluate_criterion(df, criterion):
         return mask
             
     elif isinstance(criterion, Multiple):
-        masks = [evaluate_criterion(df, c) for c in criterion.criteria]
+        masks = [_evaluate_criterion(df, c) for c in criterion.criteria]
         if criterion.logical_operator == "AND":
             # start with first mask and progressively AND the remaining ones
             mask = masks[0]
@@ -102,7 +103,7 @@ def evaluate_criterion(df, criterion):
         logger.error(error)
         raise error
 
-def add_flag(df, mask, flag_name, flag_value):
+def _add_flag(df, mask, flag_name, flag_value):
     """Set the 'flag' column to the flag bitmask value if the mask evaluates to true.
 
     For each row that meets the specified criterion, this function modifies the 'flag' 
@@ -126,7 +127,7 @@ def add_flag(df, mask, flag_name, flag_value):
 
     return df
 
-def flag_summary(df):
+def _flag_summary(df):
     """Create a table with a summary of flags.
 
     Args:
@@ -162,7 +163,7 @@ def echo_flag_table(df):
     Args:
         df (pd.DataFrame): DataFrame with flags to summarize.
     """
-    explained_df = flag_summary(df)
+    explained_df = _flag_summary(df)
 
     table = Table()
     for column in ["FLAG", *explained_df.columns]:
@@ -187,6 +188,16 @@ def flag_dataframe(df):
     """
     df = df.copy()
 
+    # Drop nan flags (could happen after a merge)
+    if "flag" not in df.columns:
+        df["flag"] = 0
+    elif df["flag"].isna().any():
+        logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
+        df = df.dropna(how='any', subset=["flag"])
+
+    # only need column names to be valid for flagging
+    # we don't coerce dtypes so that merged files can be flagged
+    # (this causes issues when the outer merge introduces nans in Int cols)
     df = validate_schema(df)
 
     source = infer_data_source(df)
@@ -196,7 +207,8 @@ def flag_dataframe(df):
 
     # create flag column if it doesn't exist
     if "flag" not in df.columns:
-        df["flag"] = 0
+        df["flag"] = np.int64(0)
+
 
     # sort the dataframe once before adding flags
     df = fix_timestamps(df, sort_values=True)
@@ -205,6 +217,6 @@ def flag_dataframe(df):
     for flag_name, criteria in name_to_criteria:
         flag_value = FLAG_VALUES[flag_name]                      
         for criterion in criteria:
-            mask =  evaluate_criterion(df, criterion)             
-            df = add_flag(df, mask, flag_name, flag_value)
+            mask =  _evaluate_criterion(df, criterion)             
+            df = _add_flag(df, mask, flag_name, flag_value)
     return df

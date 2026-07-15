@@ -21,11 +21,6 @@ def expunge_dataframe(df):
     # force the flag column to be an int
     df["flag"] = df["flag"].astype(int, errors='ignore')
 
-    # Drop nan flags (should never happen)
-    if df["flag"].isna().any():
-        logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
-        df = df.dropna(how='any', subset=["flag"])
-
     for label, value, cols in list_of_flags:
         mask = df["flag"] & value == value
         if not mask.any() or cols is None:
