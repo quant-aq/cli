@@ -7,6 +7,8 @@ jobs:
     build-n-publish:
         name: Build and publish to PyPI
         runs-on: ubuntu-latest
+        permissions:
+                id-token: write
         steps:
             - name: Checkout branch
               uses: actions/checkout@v4
@@ -27,7 +29,8 @@ jobs:
             - name: Install dependencies
               run: poetry install --no-interaction --no-root
             
-            - name: Build and publish to PyPI
-              run: |
-                poetry build
-                poetry publish -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }}
+            - name: Build package
+              run: poetry build
+
+            - name: Publish package distributions to PyPI
+              uses: pypa/gh-action-pypi-publisher@release/v1
