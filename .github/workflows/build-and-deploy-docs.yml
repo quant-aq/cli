@@ -1,4 +1,5 @@
 name: docs/gh-pages
+
 on:
   release:
     types: [released]
@@ -6,51 +7,51 @@ on:
 
 permissions:
   contents: write
-
+  
 jobs:
     build-docs:
-        name: Build docs and push to gh-pages
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout branch
-              uses: actions/checkout@v4
+      name: Build docs and push to gh-pages
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout branch
+          uses: actions/checkout@v4
 
-            - name: Setup python 
-              uses: actions/setup-python@v4
-              with:
-                python-version: 3.10.5
+        - name: Setup python 
+          uses: actions/setup-python@v4
+          with:
+            python-version: 3.10.5
             
-            - name: Install poetry
-              uses: snok/install-poetry@v1.3.3
-              with:
-                version: 1.8.4
-                virtualenvs-create: true
-                virtualenvs-in-project: true
-                installer-parallel: true
+        - name: Install poetry
+          uses: snok/install-poetry@v1.3.3
+          with:
+            version: 1.8.4
+            virtualenvs-create: true
+            virtualenvs-in-project: true
+            installer-parallel: true
 
-            - name: Load cached venv
-              id: cached-poetry-dependencies
-              uses: actions/cache@v4
-              with:
-                path: .venv
-                key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        - name: Load cached venv
+          id: cached-poetry-dependencies
+          uses: actions/cache@v4
+          with:
+            path: .venv
+            key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
             
-            - name: Install dependencies
-              if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-              run: poetry install --no-interaction --no-root
+        - name: Install dependencies
+          if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+          run: poetry install --no-interaction --no-root
 
-            - name: build docs
-              run: |
-                source .venv/bin/activate
-                cd docs
-                make clean
-                make html
-                cd ..
+        - name: build docs
+          run: |
+            source .venv/bin/activate
+            cd docs
+            make clean
+            make html
+            cd ..
             
-            - name: Deploy to GitHub Pages
-              uses: Cecilapp/GitHub-Pages-deploy@v3
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                email: dhagan@mit.edu
-                build_dir: docs/_build/html
+        - name: Deploy to GitHub Pages
+          uses: Cecilapp/GitHub-Pages-deploy@v3
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            email: dhagan@mit.edu
+            build_dir: docs/_build/html
