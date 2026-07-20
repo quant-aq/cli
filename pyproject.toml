@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "quantaq-cli"
-version = "1.0.0rc0"
+version = "1.0.0rc1"
 description = "The QuantAQ Python Toolkit and CLI"
 authors = ["David H Hagan <david.hagan@quant-aq.com>"]
 license = "Apache-2.0"
