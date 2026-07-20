@@ -8,6 +8,7 @@ jobs:
   build-n-publish:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
+    environment: release # must exactly match what’s on PyPI
     permissions:
       id-token: write
     steps:
