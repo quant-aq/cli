@@ -155,7 +155,7 @@ DATABASE_CRITERIA = {
         # Check 2: ratio between the OPC and nephelometer is within spec
         Multiple(
             criteria=(
-                Single(column="opc_bin0", op=">=", value=10.0),
+                Single(column="neph_bin0", op=">=", value=10.0),
                 Ratio(column_numerator="neph_bin0", 
                       column_denominator="opc_bin0",
                       op=">", 
@@ -183,7 +183,7 @@ RAWSD_CRITERIA = {
         # Check 5: ratio between the OPC and nephelometer is within spec
         Multiple(
             criteria=(
-                Single(column="opc_bin0", op=">=", value=10.0),
+                Single(column="neph_bin0", op=">=", value=10.0),
                 Ratio(column_numerator="neph_bin0", 
                       column_denominator="opc_bin0",
                       op=">", 
