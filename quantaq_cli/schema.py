@@ -110,12 +110,12 @@ COLUMN_DEFINITIONS = [
     ('vbat', np.float64),
 
     # --- Device / metadata columns ---
-    ('fw', 'Int64'),  # nullable pandas int
+    ('fw', np.float64), # needs to be nullable for older data
     ('flag', np.int64),
     ('connection_status', np.int16),
     ('iteration', np.int16),
-    ('dd_measurement_state', 'Int64'),  # nullable pandas int
-    ('dd_operating_state', 'Int64'),  # nullable pandas int
+    ('dd_measurement_state', np.float64), # needs to be nullable for older data
+    ('dd_operating_state', np.float64), # needs to be nullable for older data
 ]
 
 STATIC_COLUMN_RENAMES = {
