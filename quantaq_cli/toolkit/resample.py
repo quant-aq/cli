@@ -51,61 +51,52 @@ def _components_from_polar(
     df[v_col] = df[ws_col] * np.cos(wd_rad)
     return df
 
-def _aggregate_group(group, agg):
-    """Aggregate a single resample bin using flag-aware row selection.
+def _flag_aware_resample(df, rule, keys, agg):
+    """Vectorized flag-aware resampling.
 
-    This attempts to mirror the averaging logic in the firmware:
-    If the bin has at least one good row (flag == 0), only those rows
-    are aggregated and the resulting flag is 0. If there are no good rows (every 
-    row in the bin is flagged), all rows are aggregated instead, and the resulting flag is the
-    bitwise OR of every flag value that was present in the bin.
+    For each resample bin: if any row has flag == 0, aggregate only those
+    "clean" rows and set the output flag to 0. Otherwise aggregate all rows
+    in the bin and set the output flag to the bitwise OR of every flag value
+    present.
 
     Args:
-        group (pd.DataFrame): All rows falling in one resample bin
+        df (pd.DataFrame): the input dataframe to resample
+        rule: Any pandas offset alias, e.g. ``"1min"``, ``"1h"``, ``"1D"``.
+        keys (list[str]): Column(s) to group by before resampling (e.g.
+            ``["sn"]``), so each device/location is resampled independently.
+            Pass an empty list to resample the whole frame as one series
+            of bins.
         agg (dict): Mapping of column name -> aggregation method, defined inside
-            resample_dataframe.
-
-    Returns:
-        pd.Series: One aggregated row for this bin.
+                    resample_dataframe.
     """
-    if 'flag' not in group.columns: 
-        error = ValueError("No 'flag' column found in dataframe! Cannot implement"
-        "flag-aware resampling. Consider calling flag_dataframe() first.")
+
+    if "flag" not in df.columns:
+        error = ValueError(
+            "No 'flag' column found in dataframe! Cannot implement "
+            "flag-aware resampling. Consider calling flag_dataframe() first."
+        )
         logger.error(error)
         raise error
 
-    # resample can produce empty bins so we check len(group)
-    if len(group): 
-        clean_mask = group['flag'] == 0 # true for every good row
+    def _resampler(frame):
+        return frame.groupby(keys).resample(rule) if keys else frame.resample(rule)
 
-        # there's at least 1 good row --> aggregate only the good rows, and set the new flag to 0
-        if clean_mask.any():
-            subset = group.loc[clean_mask]
-            group_flag = 0 
+    clean_agg = _resampler(df[df["flag"] == 0]).agg(agg)
 
-        # there are no good rows --> aggregate all rows, and combine flags using bitwise OR
-        else:
-            subset = group 
-            group_flag = int(np.bitwise_or.reduce(group['flag'].to_numpy()))
-    else:
-        # empty bin (produced by resampe) --> all columns will be nan, include the flag
-        subset = group
-        group_flag = np.nan
+    base_resampler = _resampler(df)
+    all_agg = base_resampler.agg(agg)
+    flag_col = base_resampler["flag"]
+    has_clean = flag_col.agg(lambda s: bool((s == 0).any()))
+    flag_or = flag_col.agg(lambda s: int(np.bitwise_or.reduce(s.to_numpy())) if len(s) else np.nan)
 
-    # hack for naming collision issue with "first" and "last" agg methods
-    # (TypeError: NDFrame.first() missing 1 required positional argument: 'offset')
-    values = {}
-    for col, how in agg.items():
-        if how == "first":
-            values[col] = subset[col].iloc[0] if len(subset) else np.nan
-        elif how == "last":
-            values[col] = subset[col].iloc[-1] if len(subset) else np.nan
-        else:
-            values[col] = subset[col].agg(how)
+    clean_agg = clean_agg.reindex(all_agg.index)
+    has_clean = has_clean.reindex(all_agg.index)
+    flag_or = flag_or.reindex(all_agg.index)
 
-    values['flag'] = group_flag
+    out = clean_agg.where(has_clean, all_agg)
+    out["flag"] = np.where(has_clean, 0, flag_or)
 
-    return pd.Series(values)
+    return out.reset_index()
 
 def resample_dataframe(
     df: pd.DataFrame,
@@ -208,19 +199,7 @@ def resample_dataframe(
 
     indexed = df.set_index(on)
     if flag_aware:
-        if keys:
-            out = (
-                indexed.groupby(keys)
-                .resample(rule)
-                .apply(_aggregate_group, agg=agg)
-                .reset_index()
-            )
-        else:
-            out = (
-                indexed.resample(rule)
-                .apply(_aggregate_group, agg=agg)
-                .reset_index()
-            )
+        out = _flag_aware_resample(indexed, rule, keys, agg)
     else:
         if keys:
             out = indexed.groupby(keys).resample(rule).agg(agg).reset_index()
