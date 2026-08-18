@@ -192,11 +192,18 @@ def resample_dataframe(
     value_cols = [
         c for c in df.columns if c != on and c != 'flag' and c not in keys and c not in derived
     ]
+
+    # hack for naming collision issue with "first" and "last" agg methods
+    # (TypeError: NDFrame.first() missing 1 required positional argument: 'offset')
     agg = {
-        c: (numeric_how if is_numeric_dtype(df[c]) else nonnumeric_how)
+        c: (
+            numeric_how if is_numeric_dtype(df[c])
+            else (lambda s: s.iloc[0] if len(s) else np.nan) if nonnumeric_how == "first"
+            else (lambda s: s.iloc[-1] if len(s) else np.nan) if nonnumeric_how == "last"
+            else nonnumeric_how
+        )
         for c in value_cols
     }
-
     indexed = df.set_index(on)
     if flag_aware:
         out = _flag_aware_resample(indexed, rule, keys, agg)
