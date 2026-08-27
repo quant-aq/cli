@@ -108,6 +108,7 @@ def resample_dataframe(
     flag_aware: bool = False,
     numeric_how: str = "mean",
     nonnumeric_how: str = "first",
+    force_nonnumeric: str | list[str] | None = None,
 ) -> pd.DataFrame:
     """Resample a time-indexed frame, handling mixed dtypes safely.
 
@@ -144,6 +145,9 @@ def resample_dataframe(
             output.
         numeric_how: Aggregation for numeric columns.
         nonnumeric_how: Aggregation for non-numeric columns.
+        force_nonnumeric: Column name(s) to always aggregate with
+            ``nonnumeric_how`` regardless of dtype, e.g. ``"fw"``,
+            which is numeric but shouldn't be averaged.
 
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
@@ -152,6 +156,11 @@ def resample_dataframe(
         df[on] = pd.to_datetime(df[on])
 
     keys = [by] if isinstance(by, str) else list(by or [])
+    force_nonnumeric_set = (
+        {force_nonnumeric}
+        if isinstance(force_nonnumeric, str)
+        else set(force_nonnumeric or [])
+    )
 
     # When vector-averaging wind, the speed/direction columns must never be
     # scalar-aggregated -- drop them from the agg pass and derive them from the
@@ -197,7 +206,7 @@ def resample_dataframe(
     # (TypeError: NDFrame.first() missing 1 required positional argument: 'offset')
     agg = {
         c: (
-            numeric_how if is_numeric_dtype(df[c])
+            numeric_how if is_numeric_dtype(df[c]) and c not in force_nonnumeric_set
             else (lambda s: s.iloc[0] if len(s) else np.nan) if nonnumeric_how == "first"
             else (lambda s: s.iloc[-1] if len(s) else np.nan) if nonnumeric_how == "last"
             else nonnumeric_how
