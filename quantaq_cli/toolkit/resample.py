@@ -51,6 +51,29 @@ def _components_from_polar(
     df[v_col] = df[ws_col] * np.cos(wd_rad)
     return df
 
+def _min_required_count(timestamps, rule, threshold):
+    """The minimum number of non-null samples needed in one resampling bin to 
+    meet the data completeness threshold.
+
+    We infer the native sampling interval from the median tdiff (spacing between
+    consecutive timestamps in ``timestamps``), then compared to the resampling
+    bin width to estimate how many native-resolution rows should fall in
+    one bin. E.g. 1-min data resampled to "1hr" expects ~60 rows/bin;
+    at ``threshold=0.75`` a bin needs >= 45 non-null rows to survive.
+
+    Args:
+        timestamps: The timestamp series (pre-resampling)
+        rule: The pandas offset alias passed to ``resample_dataframe``.
+        threshold: The required fraction of expected samples, e.g. ``0.75``.
+
+    """
+    bin_width = pd.Timedelta(pd.tseries.frequencies.to_offset(rule))
+    median_tdiff = pd.to_datetime(timestamps).sort_values().diff().median()
+    if pd.isna(median_tdiff) or median_tdiff <= pd.Timedelta(0):
+        return 0
+    expected_samples = bin_width / median_tdiff
+    return int(np.ceil(threshold * expected_samples))
+
 def _flag_aware_resample(df, rule, keys, agg):
     """Vectorized flag-aware resampling.
 
@@ -109,6 +132,7 @@ def resample_dataframe(
     numeric_how: str = "mean",
     nonnumeric_how: str = "first",
     force_nonnumeric: str | list[str] | None = None,
+    completeness_threshold: float | None = None,
 ) -> pd.DataFrame:
     """Resample a time-indexed frame, handling mixed dtypes safely.
 
@@ -148,6 +172,14 @@ def resample_dataframe(
         force_nonnumeric: Column name(s) to always aggregate with
             ``nonnumeric_how`` regardless of dtype, e.g. ``"fw"``,
             which is numeric but shouldn't be averaged.
+        completeness_threshold: If given (e.g. ``0.75``), bins that don't
+            meet the data-completeness requirement get every value column set
+            to NaN. The definition of "complete" depends on ``flag_aware``:
+
+              - If ``flag_aware=True``: the bin needs this fraction of its expected 
+                native-resolution sample count to be clean (flag==0)
+              - If ``flag_aware=False``: the bin needs this fraction of its expected 
+                native-resolution sample count to be non-null
 
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
@@ -221,6 +253,72 @@ def resample_dataframe(
             out = indexed.groupby(keys).resample(rule).agg(agg).reset_index()
         else:
             out = indexed.resample(rule).agg(agg).reset_index()
+
+    if completeness_threshold is not None:
+        merge_on = keys + [on]
+
+        if flag_aware:
+            # require >= completeness_threshold fraction of the expected
+            # sample count to be clean (flag == 0)
+            clean_indexed = indexed[indexed["flag"] == 0]
+            if keys:
+                clean_counts = (
+                    clean_indexed.groupby(keys).resample(rule)["flag"]
+                    .count().rename("_clean_count").reset_index()
+                )
+                min_count_by_group = (
+                    df.groupby(keys)[on]
+                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
+                    .rename("_min_count")
+                )
+                clean_counts = clean_counts.merge(min_count_by_group, on=keys, how="left")
+            else:
+                clean_counts = (
+                    clean_indexed["flag"].resample(rule)
+                    .count().rename("_clean_count").reset_index()
+                )
+                clean_counts["_min_count"] = _min_required_count(
+                    df[on], rule, completeness_threshold
+                )
+            clean_counts["_clean_count"] = clean_counts["_clean_count"].fillna(0)
+
+            merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
+            fail_mask = merged["_clean_count"] < merged["_min_count"]
+
+            for c in value_cols:
+                if c not in out.columns:
+                    continue
+                out.loc[fail_mask.to_numpy(), c] = np.nan
+        else:
+            # require >= completeness_threshold fraction of the expected
+            # sample count to be non-null, for each value column
+            if keys:
+                raw_counts = (
+                    indexed.groupby(keys).resample(rule)[value_cols].count().reset_index()
+                )
+                min_count_by_group = (
+                    df.groupby(keys)[on]
+                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
+                    .rename("_min_count")
+                )
+                raw_counts = raw_counts.merge(min_count_by_group, on=keys, how="left")
+            else:
+                raw_counts = indexed[value_cols].resample(rule).count().reset_index()
+                raw_counts["_min_count"] = _min_required_count(
+                    df[on], rule, completeness_threshold
+                )
+
+            merged_counts = out[merge_on].merge(raw_counts, on=merge_on, how="left")
+            for c in value_cols:
+                if c not in out.columns:
+                    continue
+                short = merged_counts[c] < merged_counts["_min_count"]
+                out.loc[short.to_numpy(), c] = np.nan
+
+        logger.debug(
+            "Applied {:.0%} completeness threshold to {} value column(s)",
+            completeness_threshold, len(value_cols),
+        )
 
     if do_wind:
         out = _vector_wind(out, *wind)
