@@ -173,13 +173,13 @@ def resample_dataframe(
             ``nonnumeric_how`` regardless of dtype, e.g. ``"fw"``,
             which is numeric but shouldn't be averaged.
         completeness_threshold: If given (e.g. ``0.75``), bins that don't
-            meet the data-completeness requirement get every value column set
-            to NaN. The definition of "complete" depends on ``flag_aware``:
+            meet the data-completeness requirement are set to NaN. 
+            The definition of "complete" depends on ``flag_aware``:
 
               - If ``flag_aware=True``: the bin needs this fraction of its expected 
-                native-resolution sample count to be clean (flag==0)
+                sample count to be clean (flag==0)
               - If ``flag_aware=False``: the bin needs this fraction of its expected 
-                native-resolution sample count to be non-null
+                sample count to be non-null
 
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
@@ -256,6 +256,7 @@ def resample_dataframe(
 
     if completeness_threshold is not None:
         merge_on = keys + [on]
+        numeric_value_cols = [c for c in value_cols if is_numeric_dtype(df[c])]
 
         if flag_aware:
             # require >= completeness_threshold fraction of the expected
@@ -285,16 +286,16 @@ def resample_dataframe(
             merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
             fail_mask = merged["_clean_count"] < merged["_min_count"]
 
-            for c in value_cols:
+            for c in numeric_value_cols:
                 if c not in out.columns:
                     continue
                 out.loc[fail_mask.to_numpy(), c] = np.nan
         else:
             # require >= completeness_threshold fraction of the expected
-            # sample count to be non-null, for each value column
+            # sample count to be non-null, for each numeric value column
             if keys:
                 raw_counts = (
-                    indexed.groupby(keys).resample(rule)[value_cols].count().reset_index()
+                    indexed.groupby(keys).resample(rule)[numeric_value_cols].count().reset_index()
                 )
                 min_count_by_group = (
                     df.groupby(keys)[on]
@@ -303,21 +304,21 @@ def resample_dataframe(
                 )
                 raw_counts = raw_counts.merge(min_count_by_group, on=keys, how="left")
             else:
-                raw_counts = indexed[value_cols].resample(rule).count().reset_index()
+                raw_counts = indexed[numeric_value_cols].resample(rule).count().reset_index()
                 raw_counts["_min_count"] = _min_required_count(
                     df[on], rule, completeness_threshold
                 )
 
             merged_counts = out[merge_on].merge(raw_counts, on=merge_on, how="left")
-            for c in value_cols:
+            for c in numeric_value_cols:
                 if c not in out.columns:
                     continue
                 short = merged_counts[c] < merged_counts["_min_count"]
                 out.loc[short.to_numpy(), c] = np.nan
 
         logger.debug(
-            "Applied {:.0%} completeness threshold to {} value column(s)",
-            completeness_threshold, len(value_cols),
+            "Applied {:.0%} completeness threshold to {} numeric value column(s)",
+            completeness_threshold, len(numeric_value_cols),
         )
 
     if do_wind:
