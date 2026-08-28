@@ -118,6 +118,14 @@ COLUMN_DEFINITIONS = [
     ('iteration', np.int16),
     ('dd_measurement_state', np.float64), # needs to be nullable for older data
     ('dd_operating_state', np.float64), # needs to be nullable for older data
+
+    # -- Wind columns --
+    ('wx_u', np.float64),
+    ('wx_u', np.float64),
+    ('wx_wd', np.float64),
+    ('wx_ws', np.float64),
+    ('wx_ws_scalar', np.float64),
+
 ]
 
 STATIC_COLUMN_RENAMES = {
@@ -157,7 +165,14 @@ STATIC_COLUMN_RENAMES = {
     "rh": "sample_rh",
 
     # --- Device / metadata columns ---
-    "operating_state": "dd_operating_state"
+    "operating_state": "dd_operating_state",
+
+    # -- Wind columns ---
+    "w_u": "wx_u", 
+    "w_v": "wx_v", 
+    "wd": "wx_wd",
+    "ws_vector": "wx_ws",  
+    "ws" : "wx_ws_scalar"
 }
 
 # Prefixes for unstandardized column names
