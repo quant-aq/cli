@@ -9,34 +9,34 @@ import pandera.pandas as pa
 # Default dtypes
 COLUMN_DEFINITIONS = [
     # --- OPC colunms ---
-    ('opc_bin0', np.float64),
-    ('opc_bin1', np.float64),
-    ('opc_bin2', np.float64),
-    ('opc_bin3', np.float64),
-    ('opc_bin4', np.float64),
-    ('opc_bin5', np.float64),
-    ('opc_bin6', np.float64),
-    ('opc_bin7', np.float64),
-    ('opc_bin8', np.float64),
-    ('opc_bin9', np.float64),
-    ('opc_bin10', np.float64),
-    ('opc_bin11', np.float64),
-    ('opc_bin12', np.float64),
-    ('opc_bin13', np.float64),
-    ('opc_bin14', np.float64),
-    ('opc_bin15', np.float64),
-    ('opc_bin16', np.float64),
-    ('opc_bin17', np.float64),
-    ('opc_bin18', np.float64),
-    ('opc_bin19', np.float64),
-    ('opc_bin20', np.float64),
-    ('opc_bin21', np.float64),
-    ('opc_bin22', np.float64),
-    ('opc_bin23', np.float64),
-    ('opc_bin1MToF', np.float64),
-    ('opc_bin3MToF', np.float64),
-    ('opc_bin5MToF', np.float64),
-    ('opc_bin7MToF', np.float64),
+    ('bin0', np.float64),
+    ('bin1', np.float64),
+    ('bin2', np.float64),
+    ('bin3', np.float64),
+    ('bin4', np.float64),
+    ('bin5', np.float64),
+    ('bin6', np.float64),
+    ('bin7', np.float64),
+    ('bin8', np.float64),
+    ('bin9', np.float64),
+    ('bin10', np.float64),
+    ('bin11', np.float64),
+    ('bin12', np.float64),
+    ('bin13', np.float64),
+    ('bin14', np.float64),
+    ('bin15', np.float64),
+    ('bin16', np.float64),
+    ('bin17', np.float64),
+    ('bin18', np.float64),
+    ('bin19', np.float64),
+    ('bin20', np.float64),
+    ('bin21', np.float64),
+    ('bin22', np.float64),
+    ('bin23', np.float64),
+    ('bin1MToF', np.float64),
+    ('bin3MToF', np.float64),
+    ('bin5MToF', np.float64),
+    ('bin7MToF', np.float64),
     ('opc_temp', np.float64),
     ('opc_rh', np.float64),
     ('opc_pm1', np.float64),
@@ -160,7 +160,7 @@ STATIC_COLUMN_RENAMES = {
 }
 
 # Prefixes for unstandardized column names
-COLUMN_RENAME_PREFIXES = ("bin", "opc.bin", "met.", "gases.", "geo.")
+COLUMN_RENAME_PREFIXES = ("opc.bin", "met.", "gases.", "geo.")
 
 
 def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerce_rename=True):
@@ -213,10 +213,8 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
         """Predict what standardize_columns() would rename this column to."""
         if col in STATIC_COLUMN_RENAMES:
             return STATIC_COLUMN_RENAMES[col]
-        if col.startswith("bin"):
-            return col.replace("bin", "opc_bin")
         if col.startswith("opc.bin"):
-            return col.replace(".", "_")
+            return col.replace("opc.", "")
         if col.startswith("met."):
             return col.replace("met.", "")
         if col.startswith("gases."):
@@ -314,11 +312,6 @@ def standardize_columns(df):
     # STATIC_COLUMN_RENAMES dict used by validate_schema
     column_renames = dict(STATIC_COLUMN_RENAMES)
 
-    # bin0 --> opc_bin0, etc..
-    for column in df.columns:
-        if column.startswith("bin"):  # opc_bin0, opc_bin23
-            column_renames[column] = column.replace("bin", "opc_bin")
-
     # Add diff columns (we minus ae) if they don't already exist
     if not any('diff' in col for col in df.columns):
         for pollutant in ("co", "no", "no2"):
@@ -332,8 +325,8 @@ def standardize_columns(df):
 
     # CloudAPI schema to database schema
     for column in df.columns:
-        if column.startswith("opc.bin"):  # opc_bin0, opc_bin23
-            column_renames[column] = column.replace(".", "_")
+        if column.startswith("opc.bin"): 
+            column_renames[column] = column.replace("opc.", "")
         elif column.startswith("met."):
             column_renames[column] = column.replace("met.", "")
         elif column.startswith("gases."):
