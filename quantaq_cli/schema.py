@@ -170,6 +170,8 @@ STATIC_COLUMN_RENAMES = {
     # -- Wind columns ---
     "w_u": "wx_u", 
     "w_v": "wx_v", 
+    "u": "wx_u", 
+    "v": "wx_v", 
     "wd": "wx_wd",
     "ws_vector": "wx_ws",  
     "ws" : "wx_ws_scalar"
