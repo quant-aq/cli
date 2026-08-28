@@ -42,9 +42,10 @@ def infer_data_source(df, tscol=None):
 
     dominant_tdiff = tdiff_counts.idxmax()
 
-    mostly_1min = dominant_tdiff == 60.0
-    mostly_5sec = dominant_tdiff == 5.0
-    mostly_10sec = dominant_tdiff == 10.0
+    tolerance = 2.0
+    mostly_1min = abs(dominant_tdiff - 60.0) <= tolerance
+    mostly_5sec = abs(dominant_tdiff - 5.0) <= tolerance
+    mostly_10sec = abs(dominant_tdiff - 10.0) <= tolerance
 
     if mostly_1min:
         logger.info(f"Reading mostly {dominant_tdiff}s data --> inferring database")

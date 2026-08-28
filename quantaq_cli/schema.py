@@ -110,12 +110,12 @@ COLUMN_DEFINITIONS = [
     ('vbat', np.float64),
 
     # --- Device / metadata columns ---
-    ('fw', np.int64),
+    ('fw', np.float64), # needs to be nullable for older data
     ('flag', np.int64),
     ('connection_status', np.int16),
     ('iteration', np.int16),
-    ('dd_measurement_state', np.int64),
-    ('dd_operating_state', np.int64),
+    ('dd_measurement_state', np.float64), # needs to be nullable for older data
+    ('dd_operating_state', np.float64), # needs to be nullable for older data
 ]
 
 STATIC_COLUMN_RENAMES = {
@@ -126,6 +126,8 @@ STATIC_COLUMN_RENAMES = {
     "opcn3_pm1": "opc_pm1",
     "opcn3_pm25": "opc_pm25",
     "opcn3_pm10": "opc_pm10",
+    "opcn3_temp": "opc_temp",
+    "opcn3_rh": "opc_rh",
     "sample_period": "opc_sample_period",
     "sample_flow": "opc_sample_flow",
     "laser_status": "opc_laser_status",
@@ -151,6 +153,9 @@ STATIC_COLUMN_RENAMES = {
     # --- RHT columns ---
     "temp": "sample_temp",
     "rh": "sample_rh",
+
+    # --- Device / metadata columns ---
+    "operating_state": "dd_operating_state"
 }
 
 # Prefixes for unstandardized column names
