@@ -3,6 +3,7 @@ import json
 
 from loguru import logger
 import numpy as np
+import pandas as pd
 import pandera.pandas as pa
 
 
@@ -267,11 +268,20 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
 
         if coerce_dtypes and _wrong_dtype_columns(df):
             logger.warning("Coercing dtypes to expected types.")
-            dtype_map = {
-                col: dtype for col, dtype in COLUMN_DEFINITIONS
-                if col in df.columns
-            }
-            df = df.astype(dtype_map)
+            for col, dtype in COLUMN_DEFINITIONS:
+                if col not in df.columns:
+                    continue
+                if np.issubdtype(np.dtype(dtype), np.number):
+                    before_na = df[col].isna().sum()
+                    df[col] = pd.to_numeric(df[col], errors="coerce").astype(dtype)
+                    new_na = df[col].isna().sum() - before_na
+                    if new_na > 0:
+                        logger.warning(
+                            "Coerced {} unparseable value(s) in '{}' to NaN.",
+                            new_na, col,
+                        )
+                else:
+                    df[col] = df[col].astype(dtype)
 
         if coerce_rename or coerce_dtypes:
             try:
