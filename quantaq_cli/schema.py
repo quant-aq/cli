@@ -1,4 +1,5 @@
 import contextlib
+import json
 
 from loguru import logger
 import numpy as np
@@ -179,15 +180,22 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     Returns:
         df (pd.DataFrame): the DataFrame with validated dtypes and column names
     """
-    df = df.copy()
 
     columns = {
-        name: pa.Column(dtype, nullable=nullable, required=required)
+        name: pa.Column(dtype, nullable=nullable, required=required, coerce=coerce_dtypes)
         for name, dtype in COLUMN_DEFINITIONS
     }
 
+    expected_dtypes = dict(COLUMN_DEFINITIONS)
     legacy_names = set(STATIC_COLUMN_RENAMES.keys())
     prefix_patterns = COLUMN_RENAME_PREFIXES
+
+    def _wrong_dtype_columns(df):
+        """Return columns whose dtype doesn't match their expected dtype."""
+        return sorted(
+            col for col in df.columns
+            if col in expected_dtypes and df[col].dtype != np.dtype(expected_dtypes[col])
+        )
 
     def _has_legacy_column_names(df):
         """Return True if any legacy names/prefixes remain."""
@@ -200,6 +208,42 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     def _no_legacy_column_names(df):
         """Pandera check: True if no legacy names/prefixes remain."""
         return not _has_legacy_column_names(df)
+
+    def _expected_rename(col):
+        """Predict what standardize_columns() would rename this column to."""
+        if col in STATIC_COLUMN_RENAMES:
+            return STATIC_COLUMN_RENAMES[col]
+        if col.startswith("bin"):
+            return col.replace("bin", "opc_bin")
+        if col.startswith("opc.bin"):
+            return col.replace(".", "_")
+        if col.startswith("met."):
+            return col.replace("met.", "")
+        if col.startswith("gases."):
+            return "ox_diff" if col == "gases.o3.diff" else col.removeprefix("gases.").replace(".", "_")
+        if col.startswith("geo."):
+            return col.removeprefix("geo.")
+        return "unknown rename rule"
+
+    def _log_failures(df):
+        """Log one line per failure: dtype mismatches and legacy column names."""
+        wrong_dtype_cols = _wrong_dtype_columns(df)
+        for col in wrong_dtype_cols:
+            logger.info(
+                "Schema validation failed - wrong dtype: '{}' should be {}, got {}",
+                col, np.dtype(expected_dtypes[col]), df[col].dtype,
+            )
+
+        if _has_legacy_column_names(df):
+            legacy_cols = (
+                sorted(legacy_names.intersection(df.columns))
+                + sorted(col for col in df.columns for p in prefix_patterns if col.startswith(p))
+            )
+            for col in legacy_cols:
+                logger.info(
+                    "Schema validation failed - unstandardized column name: should be '{}', got '{}'",
+                    _expected_rename(col), col,
+                )
 
     # index = None means no index is specified
     # strict = False allows missing and extra columns in the DataFrame
@@ -214,20 +258,16 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     )
 
     try:
-        # print all schema errors instead of raising on the first error
         schema.validate(df, lazy=True)
     except pa.errors.SchemaErrors as err:
-        logger.error("Schema validation failed.")
-        logger.error("{}", err.failure_cases.to_string())
+        logger.bind(schema_errors=err.message).error("Schema validation failed")
+        _log_failures(df)
 
-        # Check the actual condition directly rather than parsing
-        # failure_cases["check"], since pandera's naming of anonymous
-        # check functions in that column isn't a stable contract.
         if coerce_rename and _has_legacy_column_names(df):
             logger.warning("Standardizing unstandardized column names.")
             df = standardize_columns(df)
 
-        if coerce_dtypes:
+        if coerce_dtypes and _wrong_dtype_columns(df):
             logger.warning("Coercing dtypes to expected types.")
             dtype_map = {
                 col: dtype for col, dtype in COLUMN_DEFINITIONS
@@ -240,8 +280,9 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
                 schema.validate(df, lazy=True)
                 logger.info("Schema validation passed after coercion.")
             except pa.errors.SchemaErrors as second_err:
-                logger.error("Schema validation still failing after coercion.")
-                logger.error("{}", second_err.failure_cases.to_string())
+                logger.bind(schema_errors=second_err.message).error("Schema validation still failing after coercion.")
+                _log_failures(df)
+                raise ValueError(f"Schema validation failed: {json.dumps(second_err.message)}") from second_err
 
     return df
 
