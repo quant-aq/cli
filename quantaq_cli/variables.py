@@ -8,10 +8,10 @@ Flag = namedtuple("Flag", ["name", "value", "nan_columns"])
 
 # Columns to Nan -- only for standardized schema types
 _OPC_COLUMNS = [
-    "opc_bin0", "opc_bin1", "opc_bin2", "opc_bin3", "opc_bin4", "opc_bin5", "opc_bin6", "opc_bin7", "opc_bin8", "opc_bin9",
-    "opc_bin10", "opc_bin11", "opc_bin12", "opc_bin13", "opc_bin14", "opc_bin15", "opc_bin16", "opc_bin17", "opc_bin18",
-    "opc_bin19", "opc_bin20", "opc_bin21", "opc_bin22", "opc_bin23", 
-    "opc_bin1MToF", "opc_bin3MToF", "opc_bin5MToF", "opc_bin7MToF",
+    "bin0", "bin1", "bin2", "bin3", "bin4", "bin5", "bin6", "bin7", "bin8", "bin9",
+    "bin10", "bin11", "bin12", "bin13", "bin14", "bin15", "bin16", "bin17", "bin18",
+    "bin19", "bin20", "bin21", "bin22", "bin23", 
+    "bin1MToF", "bin3MToF", "bin5MToF", "bin7MToF",
     "opc_sample_period", "opc_sample_flow",
     "opc_pm1", "opc_pm25", "opc_pm10",
     "opc_laser_status", "opc_temp", "opc_rh", 
@@ -135,9 +135,9 @@ DATABASE_CRITERIA = {
         # Check: ratio between the OPC and nephelometer is within spec
         Multiple(
             criteria=(
-                Single(column="opc_bin0", op=">=", value=10.0),
+                Single(column="bin0", op=">=", value=10.0),
                 Ratio(column_numerator="neph_bin0", 
-                      column_denominator="opc_bin0",
+                      column_denominator="bin0",
                       op=">", 
                       value=2000.0),
             ), logical_operator="AND",
@@ -147,7 +147,7 @@ DATABASE_CRITERIA = {
         # Check 1: ensure that the neph isn't reading 0's when it shouldn't be
         Multiple(
             criteria=(
-                Single(column="opc_bin0", op=">=", value=10.0),
+                Single(column="bin0", op=">=", value=10.0),
                 Single(column="neph_bin0", op="==", value=0.0)
             ),
             logical_operator="AND",
@@ -157,7 +157,7 @@ DATABASE_CRITERIA = {
             criteria=(
                 Single(column="neph_bin0", op=">=", value=10.0),
                 Ratio(column_numerator="neph_bin0", 
-                      column_denominator="opc_bin0",
+                      column_denominator="bin0",
                       op=">", 
                       value=2000.0),
             ), logical_operator="AND",
@@ -185,7 +185,7 @@ RAWSD_CRITERIA = {
             criteria=(
                 Single(column="neph_bin0", op=">=", value=10.0),
                 Ratio(column_numerator="neph_bin0", 
-                      column_denominator="opc_bin0",
+                      column_denominator="bin0",
                       op=">", 
                       value=2000.0),
             ), logical_operator="AND",
