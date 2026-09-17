@@ -1,41 +1,43 @@
 import contextlib
+import json
 
 from loguru import logger
 import numpy as np
+import pandas as pd
 import pandera.pandas as pa
 
 
 # Default dtypes
 COLUMN_DEFINITIONS = [
     # --- OPC colunms ---
-    ('opc_bin0', np.float64),
-    ('opc_bin1', np.float64),
-    ('opc_bin2', np.float64),
-    ('opc_bin3', np.float64),
-    ('opc_bin4', np.float64),
-    ('opc_bin5', np.float64),
-    ('opc_bin6', np.float64),
-    ('opc_bin7', np.float64),
-    ('opc_bin8', np.float64),
-    ('opc_bin9', np.float64),
-    ('opc_bin10', np.float64),
-    ('opc_bin11', np.float64),
-    ('opc_bin12', np.float64),
-    ('opc_bin13', np.float64),
-    ('opc_bin14', np.float64),
-    ('opc_bin15', np.float64),
-    ('opc_bin16', np.float64),
-    ('opc_bin17', np.float64),
-    ('opc_bin18', np.float64),
-    ('opc_bin19', np.float64),
-    ('opc_bin20', np.float64),
-    ('opc_bin21', np.float64),
-    ('opc_bin22', np.float64),
-    ('opc_bin23', np.float64),
-    ('opc_bin1MToF', np.float64),
-    ('opc_bin3MToF', np.float64),
-    ('opc_bin5MToF', np.float64),
-    ('opc_bin7MToF', np.float64),
+    ('bin0', np.float64),
+    ('bin1', np.float64),
+    ('bin2', np.float64),
+    ('bin3', np.float64),
+    ('bin4', np.float64),
+    ('bin5', np.float64),
+    ('bin6', np.float64),
+    ('bin7', np.float64),
+    ('bin8', np.float64),
+    ('bin9', np.float64),
+    ('bin10', np.float64),
+    ('bin11', np.float64),
+    ('bin12', np.float64),
+    ('bin13', np.float64),
+    ('bin14', np.float64),
+    ('bin15', np.float64),
+    ('bin16', np.float64),
+    ('bin17', np.float64),
+    ('bin18', np.float64),
+    ('bin19', np.float64),
+    ('bin20', np.float64),
+    ('bin21', np.float64),
+    ('bin22', np.float64),
+    ('bin23', np.float64),
+    ('bin1MToF', np.float64),
+    ('bin3MToF', np.float64),
+    ('bin5MToF', np.float64),
+    ('bin7MToF', np.float64),
     ('opc_temp', np.float64),
     ('opc_rh', np.float64),
     ('opc_pm1', np.float64),
@@ -116,6 +118,14 @@ COLUMN_DEFINITIONS = [
     ('iteration', np.int16),
     ('dd_measurement_state', np.float64), # needs to be nullable for older data
     ('dd_operating_state', np.float64), # needs to be nullable for older data
+
+    # -- Wind columns --
+    ('wx_u', np.float64),
+    ('wx_u', np.float64),
+    ('wx_wd', np.float64),
+    ('wx_ws', np.float64),
+    ('wx_ws_scalar', np.float64),
+
 ]
 
 STATIC_COLUMN_RENAMES = {
@@ -155,11 +165,20 @@ STATIC_COLUMN_RENAMES = {
     "rh": "sample_rh",
 
     # --- Device / metadata columns ---
-    "operating_state": "dd_operating_state"
+    "operating_state": "dd_operating_state",
+
+    # -- Wind columns ---
+    "w_u": "wx_u", 
+    "w_v": "wx_v", 
+    "u": "wx_u", 
+    "v": "wx_v", 
+    "wd": "wx_wd",
+    "ws_vector": "wx_ws",  
+    "ws" : "wx_ws_scalar"
 }
 
 # Prefixes for unstandardized column names
-COLUMN_RENAME_PREFIXES = ("bin", "opc.bin", "met.", "gases.", "geo.")
+COLUMN_RENAME_PREFIXES = ("opc.bin", "met.", "gases.", "geo.")
 
 
 def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerce_rename=True):
@@ -179,15 +198,22 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     Returns:
         df (pd.DataFrame): the DataFrame with validated dtypes and column names
     """
-    df = df.copy()
 
     columns = {
-        name: pa.Column(dtype, nullable=nullable, required=required)
+        name: pa.Column(dtype, nullable=nullable, required=required, coerce=coerce_dtypes)
         for name, dtype in COLUMN_DEFINITIONS
     }
 
+    expected_dtypes = dict(COLUMN_DEFINITIONS)
     legacy_names = set(STATIC_COLUMN_RENAMES.keys())
     prefix_patterns = COLUMN_RENAME_PREFIXES
+
+    def _wrong_dtype_columns(df):
+        """Return columns whose dtype doesn't match their expected dtype."""
+        return sorted(
+            col for col in df.columns
+            if col in expected_dtypes and df[col].dtype != np.dtype(expected_dtypes[col])
+        )
 
     def _has_legacy_column_names(df):
         """Return True if any legacy names/prefixes remain."""
@@ -200,6 +226,40 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     def _no_legacy_column_names(df):
         """Pandera check: True if no legacy names/prefixes remain."""
         return not _has_legacy_column_names(df)
+
+    def _expected_rename(col):
+        """Predict what standardize_columns() would rename this column to."""
+        if col in STATIC_COLUMN_RENAMES:
+            return STATIC_COLUMN_RENAMES[col]
+        if col.startswith("opc.bin"):
+            return col.replace("opc.", "")
+        if col.startswith("met."):
+            return col.replace("met.", "")
+        if col.startswith("gases."):
+            return "ox_diff" if col == "gases.o3.diff" else col.removeprefix("gases.").replace(".", "_")
+        if col.startswith("geo."):
+            return col.removeprefix("geo.")
+        return "unknown rename rule"
+
+    def _log_failures(df):
+        """Log one line per failure: dtype mismatches and legacy column names."""
+        wrong_dtype_cols = _wrong_dtype_columns(df)
+        for col in wrong_dtype_cols:
+            logger.info(
+                "Schema validation failed - wrong dtype: '{}' should be {}, got {}",
+                col, np.dtype(expected_dtypes[col]), df[col].dtype,
+            )
+
+        if _has_legacy_column_names(df):
+            legacy_cols = (
+                sorted(legacy_names.intersection(df.columns))
+                + sorted(col for col in df.columns for p in prefix_patterns if col.startswith(p))
+            )
+            for col in legacy_cols:
+                logger.info(
+                    "Schema validation failed - unstandardized column name: should be '{}', got '{}'",
+                    _expected_rename(col), col,
+                )
 
     # index = None means no index is specified
     # strict = False allows missing and extra columns in the DataFrame
@@ -214,34 +274,40 @@ def validate_schema(df, nullable=True, required=False, coerce_dtypes=True, coerc
     )
 
     try:
-        # print all schema errors instead of raising on the first error
         schema.validate(df, lazy=True)
     except pa.errors.SchemaErrors as err:
-        logger.error("Schema validation failed.")
-        logger.error("{}", err.failure_cases.to_string())
+        logger.bind(schema_errors=err.message).error("Schema validation failed")
+        _log_failures(df)
 
-        # Check the actual condition directly rather than parsing
-        # failure_cases["check"], since pandera's naming of anonymous
-        # check functions in that column isn't a stable contract.
         if coerce_rename and _has_legacy_column_names(df):
             logger.warning("Standardizing unstandardized column names.")
             df = standardize_columns(df)
 
-        if coerce_dtypes:
+        if coerce_dtypes and _wrong_dtype_columns(df):
             logger.warning("Coercing dtypes to expected types.")
-            dtype_map = {
-                col: dtype for col, dtype in COLUMN_DEFINITIONS
-                if col in df.columns
-            }
-            df = df.astype(dtype_map)
+            for col, dtype in COLUMN_DEFINITIONS:
+                if col not in df.columns:
+                    continue
+                if np.issubdtype(np.dtype(dtype), np.number):
+                    before_na = df[col].isna().sum()
+                    df[col] = pd.to_numeric(df[col], errors="coerce").astype(dtype)
+                    new_na = df[col].isna().sum() - before_na
+                    if new_na > 0:
+                        logger.warning(
+                            "Coerced {} unparseable value(s) in '{}' to NaN.",
+                            new_na, col,
+                        )
+                else:
+                    df[col] = df[col].astype(dtype)
 
         if coerce_rename or coerce_dtypes:
             try:
                 schema.validate(df, lazy=True)
                 logger.info("Schema validation passed after coercion.")
             except pa.errors.SchemaErrors as second_err:
-                logger.error("Schema validation still failing after coercion.")
-                logger.error("{}", second_err.failure_cases.to_string())
+                logger.bind(schema_errors=second_err.message).error("Schema validation still failing after coercion.")
+                _log_failures(df)
+                raise ValueError(f"Schema validation failed: {json.dumps(second_err.message)}") from second_err
 
     return df
 
@@ -273,11 +339,6 @@ def standardize_columns(df):
     # STATIC_COLUMN_RENAMES dict used by validate_schema
     column_renames = dict(STATIC_COLUMN_RENAMES)
 
-    # bin0 --> opc_bin0, etc..
-    for column in df.columns:
-        if column.startswith("bin"):  # opc_bin0, opc_bin23
-            column_renames[column] = column.replace("bin", "opc_bin")
-
     # Add diff columns (we minus ae) if they don't already exist
     if not any('diff' in col for col in df.columns):
         for pollutant in ("co", "no", "no2"):
@@ -291,8 +352,8 @@ def standardize_columns(df):
 
     # CloudAPI schema to database schema
     for column in df.columns:
-        if column.startswith("opc.bin"):  # opc_bin0, opc_bin23
-            column_renames[column] = column.replace(".", "_")
+        if column.startswith("opc.bin"): 
+            column_renames[column] = column.replace("opc.", "")
         elif column.startswith("met."):
             column_renames[column] = column.replace("met.", "")
         elif column.startswith("gases."):

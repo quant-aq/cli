@@ -118,6 +118,14 @@ def _flag_aware_resample(df, rule, keys, agg):
 
     out = clean_agg.where(has_clean, all_agg)
     out["flag"] = np.where(has_clean, 0, flag_or)
+    
+    # drop empty bins
+    is_empty_bin = flag_or.isna()
+    if is_empty_bin.any():
+        logger.debug("Dropping {} empty resample bin(s)", int(is_empty_bin.sum()))
+        out = out.loc[~is_empty_bin]
+
+    out["flag"] = out["flag"].astype("int64")
 
     return out.reset_index()
 
@@ -205,7 +213,7 @@ def resample_dataframe(
         if have_uv and (df[u_col].isna().all() or df[v_col].isna().all()):
             logger.debug(
                     "All wind components contain NaNs ({}: {}, {}: {}); "
-                    "Deriving them from the averaged u/v components",
+                    "cannot vector-average from u/v - will derive from speed/direction instead",
                     u_col, int(df[u_col].isna().sum()),
                     v_col, int(df[v_col].isna().sum()),
                 )
