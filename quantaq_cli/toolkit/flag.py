@@ -176,7 +176,7 @@ def echo_flag_table(df):
         table.add_row(*map(str, row))
     rich.print(table)
 
-def flag_dataframe(df):
+def flag_dataframe(df, reset_flags=False):
     """Re-flags a DataFrame by iterating through the FLAG_DEFINITIONS and calling
     the _add_flag() function one-by-one.
 
@@ -189,7 +189,11 @@ def flag_dataframe(df):
     df = df.copy()
 
     # set flags to zero before re-flagging
-    df["flag"] = np.int64(0)
+    if reset_flags or 'flag' not in df.columns:
+        df["flag"] = np.int64(0)
+    elif df["flag"].isna().any():
+        logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
+        df = df.dropna(how='any', subset=["flag"])
 
     # only need column names to be valid for flagging
     # we don't coerce dtypes so that merged files can be flagged
