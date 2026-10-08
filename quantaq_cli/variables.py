@@ -142,6 +142,16 @@ DATABASE_CRITERIA = {
                       value=2000.0),
             ), logical_operator="AND",
             ),
+        # Check: ensure that the neph and opc are not both reading 0s
+        # (this happens when an entire 1-min window has FLAG_OPC and FLAG_NEPH
+        # set by the firmware at 5-s intervals)
+        Multiple(
+            criteria=(
+                Single(column="bin0", op="==", value=0.0),
+                Single(column="neph_bin0", op="==", value=0.0)
+            ),
+            logical_operator="AND",
+        ),
     ],
      "FLAG_NEPH": [
         # Check 1: ensure that the neph isn't reading 0's when it shouldn't be
@@ -161,6 +171,16 @@ DATABASE_CRITERIA = {
                       op=">", 
                       value=2000.0),
             ), logical_operator="AND",
+        ),
+        # Check 3: ensure that the neph and opc are not both reading 0s
+        # (this happens when an entire 1-min window has FLAG_OPC and FLAG_NEPH
+        # set by the firmware at 5-s intervals)
+        Multiple(
+            criteria=(
+                Single(column="bin0", op="==", value=0.0),
+                Single(column="neph_bin0", op="==", value=0.0)
+            ),
+            logical_operator="AND",
         ),
     ],
 }

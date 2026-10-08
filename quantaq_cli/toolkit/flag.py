@@ -176,12 +176,13 @@ def echo_flag_table(df):
         table.add_row(*map(str, row))
     rich.print(table)
 
-def flag_dataframe(df, reset_flags=False):
+def flag_dataframe(df, reset_flags=True):
     """Re-flags a DataFrame by iterating through the FLAG_DEFINITIONS and calling
     the _add_flag() function one-by-one.
 
     Args:
         df (pd.DataFrame): DataFrame to be flagged (or re-flagged).
+        reset_flags (bool): If True, the 'flag' column is reset to zero. Default is True.
 
     Returns:
         pd.DataFrame: The flagged DataFrame.
