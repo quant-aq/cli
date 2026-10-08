@@ -176,21 +176,22 @@ def echo_flag_table(df):
         table.add_row(*map(str, row))
     rich.print(table)
 
-def flag_dataframe(df):
+def flag_dataframe(df, reset_flags=True):
     """Re-flags a DataFrame by iterating through the FLAG_DEFINITIONS and calling
     the _add_flag() function one-by-one.
 
     Args:
         df (pd.DataFrame): DataFrame to be flagged (or re-flagged).
+        reset_flags (bool): If True, the 'flag' column is reset to zero. Default is True.
 
     Returns:
         pd.DataFrame: The flagged DataFrame.
     """
     df = df.copy()
 
-    # Drop nan flags (could happen after a merge)
-    if "flag" not in df.columns:
-        df["flag"] = 0
+    # set flags to zero before re-flagging
+    if reset_flags or 'flag' not in df.columns:
+        df["flag"] = np.int64(0)
     elif df["flag"].isna().any():
         logger.warning("Dropping {} rows with NaN flags", df["flag"].isna().sum())
         df = df.dropna(how='any', subset=["flag"])
@@ -204,11 +205,6 @@ def flag_dataframe(df):
 
     # get flag criteria (this also checks if the data source is valid)
     name_to_criteria = flag_name_to_criteria(source).items()
-
-    # create flag column if it doesn't exist
-    if "flag" not in df.columns:
-        df["flag"] = np.int64(0)
-
 
     # sort the dataframe once before adding flags
     df = fix_timestamps(df, sort_values=True)

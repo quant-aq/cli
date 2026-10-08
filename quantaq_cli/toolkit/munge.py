@@ -24,6 +24,6 @@ def clean_dataframe(df, coerce_dtypes=True, coerce_rename=True):
     
     # Validate the schema
     # by default this also coerces dtypes and column names, but that can be overrided
-    df = validate_schema(df, coerce_dtypes=True, coerce_rename=True)
+    df = validate_schema(df, coerce_dtypes=coerce_dtypes, coerce_rename=coerce_rename)
 
     return df

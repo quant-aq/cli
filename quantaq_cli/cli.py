@@ -1,5 +1,6 @@
 from pathlib import Path
-import pkg_resources
+from pathlib import Path
+from importlib.metadata import version
 
 import rich_click as click
 from loguru import logger
@@ -14,8 +15,7 @@ from quantaq_cli.toolkit.load import safe_load
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-__version__ = pkg_resources.get_distribution('quantaq_cli').version
-
+__version__ = version("quantaq_cli")
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option(__version__)
