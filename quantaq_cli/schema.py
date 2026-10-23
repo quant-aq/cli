@@ -368,3 +368,44 @@ def standardize_columns(df):
     df = df.rename(columns=column_renames)
     df = drop_unnamed(df)
     return df
+
+# utilites to undo column name standardization
+def map_new_to_old_columns(old_cols, new_cols):
+    """Map renamed columns back to their original names.
+
+    Args:
+        old_cols (Iterable[str]): Column names before standardizing.
+        new_cols (Iterable[str]): Column names after standardizing.
+
+    Returns:
+        dict: {new_name: old_name} for every column whose name changed.
+    """
+    new_cols = set(new_cols)
+    new_to_old = {}
+    for old in old_cols:
+        new = standardize_columns(pd.DataFrame(columns=[old])).columns[0]
+        if new == old:
+            continue
+        if new not in new_cols:
+            error = ValueError(f"'{old}' standardizes to '{new}', which isn't in new_cols")
+            continue
+        if new in new_to_old:
+            error = ValueError(f"'{new_to_old[new]}' and '{old}' both standardize to '{new}'")
+            logger.error(error)
+            raise error
+        new_to_old[new] = old
+    return new_to_old
+
+def undo_standardize_columns(original_cols, standardized_df):
+    """Restore the original column names on a standardized DataFrame.
+    """
+    new_to_old = map_new_to_old_columns(original_cols, standardized_df.columns)
+    restored_df = standardized_df.rename(columns=new_to_old)
+
+    duplicates = sorted(set(restored_df.columns[restored_df.columns.duplicated()]))
+    if duplicates:
+        error = ValueError(f"Restoring original names creates duplicate columns: {duplicates}")
+        logger.error(error)
+        raise error
+
+    return restored_df
