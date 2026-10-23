@@ -12,12 +12,12 @@ classifiers = []
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.14"
-pandas = ">=2.1.4,<2.2"
+pandas = ">=2.1.4,<3"
 click = "^8.1"
 pyarrow = ">=14.0.2"
 terminaltables = "^3.1.0"
 urllib3 = "^1.26.10"
-numpy = "^1.23.2"
+numpy = ">=1.23.2,<3"
 rich-click = ">=1.7.2"
 loguru = "^0.7.3"
 pandera = ">=0.24,<0.29"
