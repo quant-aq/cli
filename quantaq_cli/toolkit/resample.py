@@ -9,6 +9,9 @@ from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
 # Default (u, v, speed, direction) column names for vector wind averaging.
 WIND_COLUMNS = ("wx_u", "wx_v", "wx_ws", "wx_wd")
 
+# Flag values that count as clean (good data). Any other flag value makes a row bad.
+CLEAN_FLAGS = (0, 4096) # 4096 = overheat --> we don't nan any rows based on this so 4096 is just informational.
+
 def _vector_wind(
     df: pd.DataFrame, u_col: str, v_col: str, ws_col: str, wd_col: str
 ) -> pd.DataFrame:
@@ -52,7 +55,7 @@ def _components_from_polar(
     return df
 
 def _min_required_count(timestamps, rule, threshold):
-    """The minimum number of non-null samples needed in one resampling bin to 
+    """The minimum number of non-null samples needed in one resampling bin to
     meet the data completeness threshold.
 
     We infer the native sampling interval from the median tdiff (spacing between
@@ -77,9 +80,9 @@ def _min_required_count(timestamps, rule, threshold):
 def _flag_aware_resample(df, rule, keys, agg):
     """Vectorized flag-aware resampling.
 
-    For each resample bin: if any row has flag == 0, aggregate only those
-    "clean" rows and set the output flag to 0. Otherwise aggregate all rows
-    in the bin and set the output flag to the bitwise OR of every flag value
+    For each resample bin: if any row has flag == 0 or flag == 4096, aggregate only those
+    "clean" rows and set the output flag to the bitwise OR of their flags (0 or 4096). 
+    Otherwise aggregate all rows in the bin and set the output flag to the bitwise OR of every flag value
     present.
 
     Args:
@@ -104,20 +107,32 @@ def _flag_aware_resample(df, rule, keys, agg):
     def _resampler(frame):
         return frame.groupby(keys).resample(rule) if keys else frame.resample(rule)
 
-    clean_agg = _resampler(df[df["flag"] == 0]).agg(agg)
+    is_clean = df["flag"].isin(CLEAN_FLAGS) # rows we trust: flag 0 or 4096
+    clean_agg = _resampler(df[is_clean]).agg(agg) # each bin averaged over its clean rows only (bins with no clean rows are missing here)
+    # The clean flags are 0 and 4096, so the largest clean flag in a bin is their bitwise OR
+    clean_flag = _resampler(df[is_clean])["flag"].max()
 
     base_resampler = _resampler(df)
-    all_agg = base_resampler.agg(agg)
+    all_agg = base_resampler.agg(agg) # each bin averaged over all its rows (used for bins with no clean rows)
     flag_col = base_resampler["flag"]
-    has_clean = flag_col.agg(lambda s: bool((s == 0).any()))
-    flag_or = flag_col.agg(lambda s: int(np.bitwise_or.reduce(s.to_numpy())) if len(s) else np.nan)
+    has_clean = flag_col.agg(lambda s: bool(s.isin(CLEAN_FLAGS).any())) # does the bin have at least one clean row?
+    flag_or = flag_col.agg(lambda s: int(np.bitwise_or.reduce(s.to_numpy())) if len(s) else np.nan) # OR of every flag in the bin --> NaN for bins with no rows at all (dropped below)
 
-    clean_agg = clean_agg.reindex(all_agg.index)
+    clean_agg = clean_agg.reindex(all_agg.index) # clean_agg and clean_flag only have bins that contain clean rows so we align everyting to the full set of bins
     has_clean = has_clean.reindex(all_agg.index)
     flag_or = flag_or.reindex(all_agg.index)
+    clean_flag = clean_flag.reindex(all_agg.index)
 
-    out = clean_agg.where(has_clean, all_agg)
-    out["flag"] = np.where(has_clean, 0, flag_or)
+    out = clean_agg.where(has_clean, all_agg) # per-bin: the clean-row average if it has clean rows, otherwise the all-rows average
+    out["flag"] = np.where(has_clean, clean_flag, flag_or) # per-bin: OR of its clean flags (0 or 4096) if it has clean rows, otherwise OR of all its flags
+    
+    # drop empty bins
+    is_empty_bin = flag_or.isna()
+    if is_empty_bin.any():
+        logger.debug("Dropping {} empty resample bin(s)", int(is_empty_bin.sum()))
+        out = out.loc[~is_empty_bin]
+
+    out["flag"] = out["flag"].astype("int64")
 
     return out.reset_index()
 
@@ -158,8 +173,8 @@ def resample_dataframe(
         flag_aware: Whether to apply flag-aware row selection when resampling.
             If True, each resample bin is aggregated as follows:
 
-              - If the bin has one or more good rows (non-flagged rows, flag == 0),
-                only those rows are aggregated, and the resulting flag is 0.
+              - If the bin has one or more good rows (clean rows, flag == 0 or 4096),
+                only those rows are aggregated, and the resulting flag is the bitwise OR of their flags (0 or 4096)
               - If there are no good rows (every row in the bin is flagged), all
                 rows are aggregated, and the resulting flag is the bitwise OR of every
                 flag value present in the bin.
@@ -172,22 +187,26 @@ def resample_dataframe(
         force_nonnumeric: Column name(s) to always aggregate with
             ``nonnumeric_how`` regardless of dtype, e.g. ``"fw"``,
             which is numeric but shouldn't be averaged.
-        completeness_threshold: If given (e.g. ``0.75``), bins that don't
-            meet the data-completeness requirement are set to NaN. 
-            The definition of "complete" depends on ``flag_aware``:
-
-              - If ``flag_aware=True``: the bin needs this fraction of its expected 
-                sample count to be clean (flag==0)
-              - If ``flag_aware=False``: the bin needs this fraction of its expected 
-                sample count to be non-null
+        completeness_threshold: If given (e.g. ``0.75``), each numeric column is set
+            to NaN in bins where it has fewer non-null values than this fraction of
+            the expected sample count. Only allowed with ``flag_aware=False``; with
+            ``flag_aware=True`` it must be None, or a ValueError is raised.
 
     Returns:
         A new frame with ``on`` (and any ``by`` keys) as columns.
     """
+    if flag_aware and completeness_threshold is not None:
+        error = ValueError(
+            "completeness_threshold only works with flag_aware=False; "
+            "pass completeness_threshold=None when flag_aware=True"
+        )
+        logger.error(error)
+        raise error
+
     if not is_datetime64_any_dtype(df[on]):
         df[on] = pd.to_datetime(df[on])
 
-    keys = [by] if isinstance(by, str) else list(by or [])
+    keys = [by] if isinstance(by, str) else list(by or []) # Group-by keys as a list ("sn" --> ["sn"], None --> [])
     force_nonnumeric_set = (
         {force_nonnumeric}
         if isinstance(force_nonnumeric, str)
@@ -205,7 +224,7 @@ def resample_dataframe(
         if have_uv and (df[u_col].isna().all() or df[v_col].isna().all()):
             logger.debug(
                     "All wind components contain NaNs ({}: {}, {}: {}); "
-                    "Deriving them from the averaged u/v components",
+                    "cannot vector-average from u/v - will derive from speed/direction instead",
                     u_col, int(df[u_col].isna().sum()),
                     v_col, int(df[v_col].isna().sum()),
                 )
@@ -230,12 +249,12 @@ def resample_dataframe(
         if do_wind:
             derived = {ws_col, wd_col}
     
-    value_cols = [
+    value_cols = [ # columns to aggregate: everything except the timestamp, flag, group keys and wind speed/direction (rebuilt from u/v at the end)
         c for c in df.columns if c != on and c != 'flag' and c not in keys and c not in derived
     ]
 
-    # hack for naming collision issue with "first" and "last" agg methods
-    # (TypeError: NDFrame.first() missing 1 required positional argument: 'offset')
+    # numeric cols use numeric_how. other columns and those in force_nonnumeric, take the first (or last) value in the bin
+    # "first" and "last" are lambdas because passing those strings to resample().agg() raises a TypeError
     agg = {
         c: (
             numeric_how if is_numeric_dtype(df[c]) and c not in force_nonnumeric_set
@@ -245,7 +264,7 @@ def resample_dataframe(
         )
         for c in value_cols
     }
-    indexed = df.set_index(on)
+    indexed = df.set_index(on) # resample() needs the timestamps as the index
     if flag_aware:
         out = _flag_aware_resample(indexed, rule, keys, agg)
     else:
@@ -254,67 +273,34 @@ def resample_dataframe(
         else:
             out = indexed.resample(rule).agg(agg).reset_index()
 
+    # Completeness check (flag_aware=False only): for each numeric column, blank the bins where it
+    # has fewer non-null values than completeness_threshold x the expected number of samples
     if completeness_threshold is not None:
         merge_on = keys + [on]
         numeric_value_cols = [c for c in value_cols if is_numeric_dtype(df[c])]
 
-        if flag_aware:
-            # require >= completeness_threshold fraction of the expected
-            # sample count to be clean (flag == 0)
-            clean_indexed = indexed[indexed["flag"] == 0]
-            if keys:
-                clean_counts = (
-                    clean_indexed.groupby(keys).resample(rule)["flag"]
-                    .count().rename("_clean_count").reset_index()
-                )
-                min_count_by_group = (
-                    df.groupby(keys)[on]
-                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
-                    .rename("_min_count")
-                )
-                clean_counts = clean_counts.merge(min_count_by_group, on=keys, how="left")
-            else:
-                clean_counts = (
-                    clean_indexed["flag"].resample(rule)
-                    .count().rename("_clean_count").reset_index()
-                )
-                clean_counts["_min_count"] = _min_required_count(
-                    df[on], rule, completeness_threshold
-                )
-            clean_counts["_clean_count"] = clean_counts["_clean_count"].fillna(0)
-
-            merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
-            fail_mask = merged["_clean_count"] < merged["_min_count"]
-
-            for c in numeric_value_cols:
-                if c not in out.columns:
-                    continue
-                out.loc[fail_mask.to_numpy(), c] = np.nan
+        if keys:
+            raw_counts = (
+                indexed.groupby(keys).resample(rule)[numeric_value_cols].count().reset_index()
+            )
+            min_count_by_group = (
+                df.groupby(keys)[on]
+                .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
+                .rename("_min_count")
+            )
+            raw_counts = raw_counts.merge(min_count_by_group, on=keys, how="left")
         else:
-            # require >= completeness_threshold fraction of the expected
-            # sample count to be non-null, for each numeric value column
-            if keys:
-                raw_counts = (
-                    indexed.groupby(keys).resample(rule)[numeric_value_cols].count().reset_index()
-                )
-                min_count_by_group = (
-                    df.groupby(keys)[on]
-                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
-                    .rename("_min_count")
-                )
-                raw_counts = raw_counts.merge(min_count_by_group, on=keys, how="left")
-            else:
-                raw_counts = indexed[numeric_value_cols].resample(rule).count().reset_index()
-                raw_counts["_min_count"] = _min_required_count(
-                    df[on], rule, completeness_threshold
-                )
+            raw_counts = indexed[numeric_value_cols].resample(rule).count().reset_index()
+            raw_counts["_min_count"] = _min_required_count(
+                df[on], rule, completeness_threshold
+            )
 
-            merged_counts = out[merge_on].merge(raw_counts, on=merge_on, how="left")
-            for c in numeric_value_cols:
-                if c not in out.columns:
-                    continue
-                short = merged_counts[c] < merged_counts["_min_count"]
-                out.loc[short.to_numpy(), c] = np.nan
+        merged_counts = out[merge_on].merge(raw_counts, on=merge_on, how="left")
+        for c in numeric_value_cols:
+            if c not in out.columns:
+                continue
+            short = merged_counts[c] < merged_counts["_min_count"]
+            out.loc[short.to_numpy(), c] = np.nan
 
         logger.debug(
             "Applied {:.0%} completeness threshold to {} numeric value column(s)",
@@ -322,6 +308,7 @@ def resample_dataframe(
         )
 
     if do_wind:
+        # Rebuild wind speed/direction from the averaged u/v
         out = _vector_wind(out, *wind)
     elif wind is not None:
         logger.trace("wind columns {} absent; skipping vector average", wind)
