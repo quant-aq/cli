@@ -9,6 +9,9 @@ from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype
 # Default (u, v, speed, direction) column names for vector wind averaging.
 WIND_COLUMNS = ("wx_u", "wx_v", "wx_ws", "wx_wd")
 
+# Flag values that count as clean (good data). Any other flag value makes a row bad.
+CLEAN_FLAGS = (0, 4096) # 4096 = overheat (we don't nan any rows based on this)
+
 def _vector_wind(
     df: pd.DataFrame, u_col: str, v_col: str, ws_col: str, wd_col: str
 ) -> pd.DataFrame:
@@ -77,7 +80,7 @@ def _min_required_count(timestamps, rule, threshold):
 def _flag_aware_resample(df, rule, keys, agg):
     """Vectorized flag-aware resampling.
 
-    For each resample bin: if any row has flag == 0, aggregate only those
+    For each resample bin: if any row has flag == 0 or flag == 4096, aggregate only those
     "clean" rows and set the output flag to 0. Otherwise aggregate all rows
     in the bin and set the output flag to the bitwise OR of every flag value
     present.
@@ -104,20 +107,24 @@ def _flag_aware_resample(df, rule, keys, agg):
     def _resampler(frame):
         return frame.groupby(keys).resample(rule) if keys else frame.resample(rule)
 
-    clean_agg = _resampler(df[df["flag"] == 0]).agg(agg)
+    is_clean = df["flag"].isin(CLEAN_FLAGS)
+    clean_agg = _resampler(df[is_clean]).agg(agg)
+    # The clean flags are 0 and 4096, so the largest clean flag in a bin is their bitwise OR
+    clean_flag = _resampler(df[is_clean])["flag"].max()
 
     base_resampler = _resampler(df)
     all_agg = base_resampler.agg(agg)
     flag_col = base_resampler["flag"]
-    has_clean = flag_col.agg(lambda s: bool((s == 0).any()))
+    has_clean = flag_col.agg(lambda s: bool(s.isin(CLEAN_FLAGS).any()))
     flag_or = flag_col.agg(lambda s: int(np.bitwise_or.reduce(s.to_numpy())) if len(s) else np.nan)
 
     clean_agg = clean_agg.reindex(all_agg.index)
     has_clean = has_clean.reindex(all_agg.index)
     flag_or = flag_or.reindex(all_agg.index)
+    clean_flag = clean_flag.reindex(all_agg.index)
 
     out = clean_agg.where(has_clean, all_agg)
-    out["flag"] = np.where(has_clean, 0, flag_or)
+    out["flag"] = np.where(has_clean, clean_flag, flag_or)
     
     # drop empty bins
     is_empty_bin = flag_or.isna()
@@ -166,7 +173,7 @@ def resample_dataframe(
         flag_aware: Whether to apply flag-aware row selection when resampling.
             If True, each resample bin is aggregated as follows:
 
-              - If the bin has one or more good rows (non-flagged rows, flag == 0),
+              - If the bin has one or more good rows (non-flagged rows, flag == 0 or 4096),
                 only those rows are aggregated, and the resulting flag is 0.
               - If there are no good rows (every row in the bin is flagged), all
                 rows are aggregated, and the resulting flag is the bitwise OR of every
@@ -185,7 +192,7 @@ def resample_dataframe(
             The definition of "complete" depends on ``flag_aware``:
 
               - If ``flag_aware=True``: the bin needs this fraction of its expected 
-                sample count to be clean (flag==0)
+                sample count to be clean (flag==0 or 4096)
               - If ``flag_aware=False``: the bin needs this fraction of its expected 
                 sample count to be non-null
 
@@ -268,30 +275,33 @@ def resample_dataframe(
 
         if flag_aware:
             # require >= completeness_threshold fraction of the expected
-            # sample count to be clean (flag == 0)
-            clean_indexed = indexed[indexed["flag"] == 0]
+            # sample count to be clean (flag == 0 or 4096)
+            clean_indexed = indexed[indexed["flag"].isin(CLEAN_FLAGS)]
             if keys:
                 clean_counts = (
                     clean_indexed.groupby(keys).resample(rule)["flag"]
                     .count().rename("_clean_count").reset_index()
                 )
-                min_count_by_group = (
-                    df.groupby(keys)[on]
-                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
-                    .rename("_min_count")
-                )
-                clean_counts = clean_counts.merge(min_count_by_group, on=keys, how="left")
             else:
                 clean_counts = (
                     clean_indexed["flag"].resample(rule)
                     .count().rename("_clean_count").reset_index()
                 )
-                clean_counts["_min_count"] = _min_required_count(
+
+            # Bins with no clean rows at the start or end are missing from clean_counts; count them as 0.
+            merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
+            merged["_clean_count"] = merged["_clean_count"].fillna(0)
+            if keys:
+                min_count_by_group = (
+                    df.groupby(keys)[on]
+                    .apply(lambda s: _min_required_count(s, rule, completeness_threshold))
+                    .rename("_min_count")
+                )
+                merged = merged.merge(min_count_by_group, on=keys, how="left")
+            else:
+                merged["_min_count"] = _min_required_count(
                     df[on], rule, completeness_threshold
                 )
-            clean_counts["_clean_count"] = clean_counts["_clean_count"].fillna(0)
-
-            merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
             fail_mask = merged["_clean_count"] < merged["_min_count"]
 
             for c in numeric_value_cols:
