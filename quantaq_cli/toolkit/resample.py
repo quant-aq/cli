@@ -81,8 +81,8 @@ def _flag_aware_resample(df, rule, keys, agg):
     """Vectorized flag-aware resampling.
 
     For each resample bin: if any row has flag == 0 or flag == 4096, aggregate only those
-    "clean" rows and set the output flag to 0. Otherwise aggregate all rows
-    in the bin and set the output flag to the bitwise OR of every flag value
+    "clean" rows and set the output flag to the bitwise OR of their flags (0 or 4096). 
+    Otherwise aggregate all rows in the bin and set the output flag to the bitwise OR of every flag value
     present.
 
     Args:
@@ -174,7 +174,7 @@ def resample_dataframe(
             If True, each resample bin is aggregated as follows:
 
               - If the bin has one or more good rows (non-flagged rows, flag == 0 or 4096),
-                only those rows are aggregated, and the resulting flag is 0.
+                only those rows are aggregated, and the resulting flag is the bitwise OR of their flags (0 or 4096)
               - If there are no good rows (every row in the bin is flagged), all
                 rows are aggregated, and the resulting flag is the bitwise OR of every
                 flag value present in the bin.
@@ -276,21 +276,13 @@ def resample_dataframe(
         if flag_aware:
             # require >= completeness_threshold fraction of the expected
             # sample count to be clean (flag == 0 or 4096)
-            clean_indexed = indexed[indexed["flag"].isin(CLEAN_FLAGS)]
+            is_clean = indexed[keys].assign(_clean_count=indexed["flag"].isin(CLEAN_FLAGS).astype("int64"))
             if keys:
-                clean_counts = (
-                    clean_indexed.groupby(keys).resample(rule)["flag"]
-                    .count().rename("_clean_count").reset_index()
-                )
+                clean_counts = is_clean.groupby(keys).resample(rule)["_clean_count"].sum().reset_index()
             else:
-                clean_counts = (
-                    clean_indexed["flag"].resample(rule)
-                    .count().rename("_clean_count").reset_index()
-                )
+                clean_counts = is_clean["_clean_count"].resample(rule).sum().reset_index()
 
-            # Bins with no clean rows at the start or end are missing from clean_counts; count them as 0.
             merged = out[merge_on].merge(clean_counts, on=merge_on, how="left")
-            merged["_clean_count"] = merged["_clean_count"].fillna(0)
             if keys:
                 min_count_by_group = (
                     df.groupby(keys)[on]
